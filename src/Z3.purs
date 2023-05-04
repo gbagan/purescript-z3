@@ -3,7 +3,9 @@ module Z3 where
 import Prelude
 
 import Control.Monad.Reader.Trans (runReaderT, ReaderT, asks)
+import Data.Array ((..))
 import Data.Maybe (Maybe(..))
+import Data.Traversable (traverse)
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect, liftEffect)
@@ -68,7 +70,7 @@ instance Distinct (Z3Int r) r where
     ctx <- getContext
     liftEffect $ Base.distinct ctx a
 
-class Arith a b r | a -> r where
+class Arith a b r | a b -> r where
   eq :: a -> b -> Z3 r (Z3Bool r)
   neq :: a -> b -> Z3 r (Z3Bool r)
   le :: a -> b -> Z3 r (Z3Bool r)
@@ -114,11 +116,27 @@ intVar = do
   name <- freshName
   liftEffect $ Base.mkIntVar ctx name
 
+intVal :: forall r. Int -> Z3 r (Z3Int r)
+intVal b = do
+  ctx <- getContext
+  liftEffect $ Base.mkIntVal ctx b
+
+intVector :: forall r. Int -> Z3 r (Array (Z3Int r))
+intVector n = traverse (const intVar) (0..n)
+
 boolVar :: forall r. Z3 r (Z3Bool r)
 boolVar = do
   ctx <- getContext
   name <- freshName
   liftEffect $ Base.mkBoolVar ctx name
+
+boolVal :: forall r. Boolean -> Z3 r (Z3Bool r)
+boolVal b = do
+  ctx <- getContext
+  liftEffect $ Base.mkBoolVal ctx b
+
+boolVector :: forall r. Int -> Z3 r (Array (Z3Bool r))
+boolVector n = traverse (const boolVar) (0..n)
 
 assert :: forall r. Z3Bool r -> Z3 r Unit
 assert v = do

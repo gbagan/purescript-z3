@@ -32,7 +32,12 @@ foreign import evalInt :: forall r.  Model r ->  Z3Int r -> Effect BigInt
 
 foreign import mkIntVar :: forall r. Context r -> String -> Effect (Z3Int r)
 
+foreign import mkIntVal :: forall r. Context r -> Int -> Effect (Z3Int r)
+
 foreign import mkBoolVar :: forall r. Context r -> String -> Effect (Z3Bool r)
+
+foreign import mkBoolVal :: forall r. Context r -> Boolean -> Effect (Z3Bool r)
+
 
 foreign import and_ :: forall r. Z3Bool r -> Z3Bool r -> Effect (Z3Bool r) 
 
