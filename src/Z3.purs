@@ -53,14 +53,14 @@ derive newtype instance Monad (Z3 r)
 derive newtype instance MonadEffect (Z3 r)
 derive newtype instance MonadAff (Z3 r)
 
-and_ :: forall r. Z3Bool r -> Z3Bool r -> Z3 r (Z3Bool r)
-and_ b1 b2 = liftEffect $ Base.and_ b1 b2
+and_ :: forall r. Z3Bool r -> Z3Bool r -> Z3Bool r
+and_ b1 b2 = Base.and_ b1 b2
 
-or_ :: forall r. Z3Bool r -> Z3Bool r -> Z3 r (Z3Bool r)
-or_ b1 b2 = liftEffect $ Base.or_ b1 b2
+or_ :: forall r. Z3Bool r -> Z3Bool r -> Z3Bool r
+or_ b1 b2 = Base.or_ b1 b2
 
-not_ :: forall r. Z3Bool r -> Z3 r (Z3Bool r)
-not_ = liftEffect <<< Base.not_
+not_ :: forall r. Z3Bool r -> Z3Bool r
+not_ = Base.not_
 
 class Distinct a r | a -> r where
   distinct :: Array a -> Z3 r (Z3Bool r)
@@ -71,44 +71,44 @@ instance Distinct (Z3Int r) r where
     liftEffect $ Base.distinct ctx a
 
 class Arith a b r | a b -> r where
-  eq :: a -> b -> Z3 r (Z3Bool r)
-  neq :: a -> b -> Z3 r (Z3Bool r)
-  le :: a -> b -> Z3 r (Z3Bool r)
-  ge :: a -> b -> Z3 r (Z3Bool r)
-  lt :: a -> b -> Z3 r (Z3Bool r)
-  gt :: a -> b -> Z3 r (Z3Bool r)
-  add :: a -> b -> Z3 r a
-  mul :: a -> b -> Z3 r a
+  eq :: a -> b -> Z3Bool r
+  neq :: a -> b -> Z3Bool r
+  le :: a -> b -> Z3Bool r
+  ge :: a -> b -> Z3Bool r
+  lt :: a -> b -> Z3Bool r
+  gt :: a -> b -> Z3Bool r
+  add :: a -> b -> a
+  mul :: a -> b -> a
 
 instance Arith (Z3Int r) Int r where
-  eq a b = liftEffect $ Base.unsafeEq a b
-  neq a b = liftEffect $ Base.unsafeNeq a b
-  le a b = liftEffect $  Base.unsafeLe a b
-  ge a b = liftEffect $ Base.unsafeGe a b
-  lt a b = liftEffect $  Base.unsafeLt a b
-  gt a b = liftEffect $ Base.unsafeGt a b
-  add a b = liftEffect $ Base.unsafeAdd a b
-  mul a b = liftEffect $ Base.unsafeMul a b
+  eq a b = Base.unsafeEq a b
+  neq a b = Base.unsafeNeq a b
+  le a b = Base.unsafeLe a b
+  ge a b = Base.unsafeGe a b
+  lt a b = Base.unsafeLt a b
+  gt a b = Base.unsafeGt a b
+  add a b = Base.unsafeAdd a b
+  mul a b = Base.unsafeMul a b
 
 instance Arith (Z3Int r) BigInt r where
-  eq a b = liftEffect $ Base.unsafeEq a b
-  neq a b = liftEffect $ Base.unsafeNeq a b
-  le a b = liftEffect $  Base.unsafeLe a b
-  ge a b = liftEffect $ Base.unsafeGe a b
-  lt a b = liftEffect $  Base.unsafeLt a b
-  gt a b = liftEffect $ Base.unsafeGt a b
-  add a b = liftEffect $ Base.unsafeAdd a b
-  mul a b = liftEffect $ Base.unsafeMul a b
+  eq a b = Base.unsafeEq a b
+  neq a b = Base.unsafeNeq a b
+  le a b = Base.unsafeLe a b
+  ge a b = Base.unsafeGe a b
+  lt a b = Base.unsafeLt a b
+  gt a b = Base.unsafeGt a b
+  add a b = Base.unsafeAdd a b
+  mul a b = Base.unsafeMul a b
 
 instance Arith (Z3Int r) (Z3Int r) r where
-  eq a b = liftEffect $ Base.unsafeEq a b
-  neq a b = liftEffect $ Base.unsafeNeq a b
-  le a b = liftEffect $ Base.unsafeLe a b
-  ge a b = liftEffect $ Base.unsafeGe a b
-  lt a b = liftEffect $  Base.unsafeLt a b
-  gt a b = liftEffect $ Base.unsafeGt a b
-  add a b = liftEffect $ Base.unsafeAdd a b
-  mul a b = liftEffect $ Base.unsafeMul a b
+  eq a b = Base.unsafeEq a b
+  neq a b = Base.unsafeNeq a b
+  le a b = Base.unsafeLe a b
+  ge a b = Base.unsafeGe a b
+  lt a b = Base.unsafeLt a b
+  gt a b = Base.unsafeGt a b
+  add a b = Base.unsafeAdd a b
+  mul a b = Base.unsafeMul a b
 
 intVar :: forall r. Z3 r (Z3Int r)
 intVar = do
@@ -122,7 +122,7 @@ intVal b = do
   liftEffect $ Base.mkIntVal ctx b
 
 intVector :: forall r. Int -> Z3 r (Array (Z3Int r))
-intVector n = traverse (const intVar) (0..n)
+intVector n = traverse (const intVar) (1..n)
 
 boolVar :: forall r. Z3 r (Z3Bool r)
 boolVar = do
@@ -136,7 +136,7 @@ boolVal b = do
   liftEffect $ Base.mkBoolVal ctx b
 
 boolVector :: forall r. Int -> Z3 r (Array (Z3Bool r))
-boolVector n = traverse (const boolVar) (0..n)
+boolVector n = traverse (const boolVar) (1..n)
 
 assert :: forall r. Z3Bool r -> Z3 r Unit
 assert v = do
@@ -161,8 +161,15 @@ withModel f = do
 showModel :: forall r. Model r -> Z3 r String
 showModel = liftEffect <<< Base.showModel
 
-evalInt :: forall r.  Model r ->  Z3Int r -> Z3 r BigInt
-evalInt m v = liftEffect $ Base.evalInt m v
+class Eval a b r | a -> b r where
+  eval :: Model r -> a -> Z3 r b
+
+instance Eval (Z3Int r) BigInt r where
+  eval m v = liftEffect $ Base.evalInt m v
+
+instance Eval (Z3Bool r) Boolean r where
+  eval m v = liftEffect $ Base.evalBool m v
+
 
 run :: forall a. (forall r. Z3 r a) -> Aff a
 run (Z3 m) = do

@@ -1,14 +1,14 @@
 import { init } from 'z3-solver'
 
-var _counter = 0
+let _counter = 0
 
 export const initz3 = init
 export const context = name => z3 => () => new z3.Context(name)
 
 export const freshContext = z3 => () => {
-    var name = "context__" + counter
-    counter++
-    return context(name)
+    const name = "context__" + _counter
+    _counter++
+    return new z3.Context(name)
 }
 
 export const solver = ctx => () => new ctx.Solver()
@@ -17,19 +17,20 @@ export const solverCheck = solver => () => solver.check()
 export const solverModel = solver => () => solver.model()
 export const showModel = model => () => model.toString()
 export const evalInt = model => v => () => model.eval(v).value()
+export const evalBool = model => v => () => model.eval(v).toString() === "true"
 export const mkIntVar = context => name => () => context.Int.const(name)
 export const mkIntVal = context => name => () => context.Int.val(name)
 export const mkBoolVar = context => name => () => context.Bool.const(name)
 export const mkBoolVal = context => b => () => context.Bool.val(b)
-export const and_ = a => b => () => a.and(b)
-export const or_ = a => b => () => a.or(b)
-export const not_ = a => () => a.neq()
+export const and_ = a => b => a.and(b)
+export const or_ = a => b => a.or(b)
+export const not_ = a => a.neq()
 export const distinct = context => a => () => context.Distinct(...a)
-export const unsafeEq = a => b => () => a.eq(b)
-export const unsafeNeq = a => b => () => a.neq(b)
-export const unsafeLe = a => b => () => a.le(b)
-export const unsafeGe = a => b => () => a.ge(b)
-export const unsafeLt = a => b => () => a.lt(b)
-export const unsafeGt = a => b => () => a.gt(b)
-export const unsafeAdd = a => b => () => a.add(b)
-export const unsafeMul = a => b => () => a.mul(b)
+export const unsafeEq = a => b => a.eq(b)
+export const unsafeNeq = a => b => a.neq(b)
+export const unsafeLe = a => b => a.le(b)
+export const unsafeGe = a => b => a.ge(b)
+export const unsafeLt = a => b => a.lt(b)
+export const unsafeGt = a => b => a.gt(b)
+export const unsafeAdd = a => b => a.add(b)
+export const unsafeMul = a => b => a.mul(b)

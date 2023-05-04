@@ -1,4 +1,5 @@
-module Test.Main where
+module Test.Main
+  where
 
 import Prelude hiding (add, mul, eq)
 
@@ -8,7 +9,7 @@ import Debug (traceM)
 import Effect (Effect)
 import Effect.Aff (Aff, launchAff_)
 import Partial.Unsafe (unsafePartial)
-import Z3 (add, mul, distinct, eq, ge, le, assert, withModel, evalInt, run, intVar)
+import Z3 (add, mul, distinct, eq, ge, le, assert, withModel, eval, run, intVar, intVector)
 
 sudoku :: Array Int
 sudoku = 
@@ -35,42 +36,36 @@ solveDogCatMouse = run do
   cat <- intVar
   mouse <- intVar
 
-  assert =<< dog `ge` 1
-  assert =<< cat `ge` 1
-  assert =<< mouse `ge` 1
-   
-  sum <- add dog =<< cat `add` mouse
-  assert =<< sum `eq` 100
-   
-  dog1500 <- dog `mul` 1500
-  cat100 <- cat `mul` 100
-  mouse25 <- mouse `mul` 25
-  sum2 <- add dog1500 =<< cat100 `add` mouse25
-  assert =<< sum2 `eq` 10000
+  assert $ dog `ge` 1
+  assert $ cat `ge` 1
+  assert $ mouse `ge` 1
+
+  assert $ (dog `add` cat `add` mouse) `eq` 100
+  assert $ (dog `mul` 1500) `add` (cat `mul` 100) `add` (mouse `mul` 25) `eq` 10000
 
   vals <- withModel \m -> do
-    dog' <- evalInt m dog
-    cat' <- evalInt m cat
-    mouse' <- evalInt m mouse
+    dog' <- eval m dog
+    cat' <- eval m cat
+    mouse' <- eval m mouse
     pure { dog: dog', mouse: mouse', cat: cat' }
   traceM vals
 
 solveSudoku :: Aff Unit
 solveSudoku = run do
-  vars <- traverse (const intVar) sudoku
+  vars <- intVector 81
   for2_ vars sudoku \var val -> do
     if val == 0 then do
-      assert =<< var `ge` 1
-      assert =<< var `le` 9
+      assert $ var `ge` 1
+      assert $ var `le` 9
     else
-      assert =<< var `eq` val
+      assert $ var `eq` val
   for_ (0..8) \i -> do
     assert =<< distinct ((0..8) <#> \j -> uIndex vars (i * 9 + j))
     assert =<< distinct ((0..8) <#> \j -> uIndex vars (j * 9 + i))
     assert =<< distinct ((0..8) <#> \j -> uIndex vars (i / 3 * 27 + i `mod` 3 * 3 + j / 3 * 9 + j `mod` 3))
 
   vals <- withModel \m -> do
-    traverse (evalInt m) vars
+    traverse (eval m) vars
   traceM vals
 
 main :: Effect Unit
