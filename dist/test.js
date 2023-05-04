@@ -13,14 +13,14 @@ async function main() {
     const { Context } = await init();
     console.log("plop")
     const ctx = new Context('main');
-
+    const b = ctx.Bool.const('b');
+    console.log(getMethods(b))
     const x = ctx.Int.const('x');
     const y = ctx.Int.const('y');
-    console.log(getMethods(x))
     const solver = new ctx.Solver();
     solver.add(x.gt(2), y.lt(10), x.add(y.mul(2)).eq(7))
     a = await solver.check()
-    console.log(a)
+    console.log(x)
     model = solver.model()
     console.log(model.eval(x).value().toString())
 }

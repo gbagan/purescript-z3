@@ -52,19 +52,13 @@ derive newtype instance MonadEffect (Z3 r)
 derive newtype instance MonadAff (Z3 r)
 
 and_ :: forall r. Z3Bool r -> Z3Bool r -> Z3 r (Z3Bool r)
-and_ b1 b2 = do
-  ctx <- getContext
-  liftEffect $ Base.and_ ctx b1 b2
+and_ b1 b2 = liftEffect $ Base.and_ b1 b2
 
 or_ :: forall r. Z3Bool r -> Z3Bool r -> Z3 r (Z3Bool r)
-or_ b1 b2 = do
-  ctx <- getContext
-  liftEffect $ Base.or_ ctx b1 b2
+or_ b1 b2 = liftEffect $ Base.or_ b1 b2
 
 not_ :: forall r. Z3Bool r -> Z3 r (Z3Bool r)
-not_ b = do
-  ctx <- getContext
-  liftEffect $ Base.not_ ctx b
+not_ = liftEffect <<< Base.not_
 
 class Distinct a r | a -> r where
   distinct :: Array a -> Z3 r (Z3Bool r)
@@ -152,10 +146,10 @@ showModel = liftEffect <<< Base.showModel
 evalInt :: forall r.  Model r ->  Z3Int r -> Z3 r BigInt
 evalInt m v = liftEffect $ Base.evalInt m v
 
-run :: forall a. String -> (forall r. Z3 r a) -> Aff a
-run name (Z3 m) = do
+run :: forall a. (forall r. Z3 r a) -> Aff a
+run (Z3 m) = do
   z3 <- toAffE $ Base.initz3 
-  ctx <- liftEffect $ Base.context name z3
+  ctx <- liftEffect $ Base.freshContext z3
   slv <- liftEffect $ Base.solver ctx
   ref <- liftEffect $ Ref.new 0
   runReaderT m { context: ctx, solver: slv, counter: ref }

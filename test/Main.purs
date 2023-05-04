@@ -29,9 +29,8 @@ for2_ t1 t2 f = sequence_ (zipWith f t1 t2)
 uIndex :: forall a. Array a -> Int -> a
 uIndex t i = unsafePartial $ unsafeIndex t i
 
-
 solveDogCatMouse :: Aff Unit
-solveDogCatMouse = run "dogcatmouse" do
+solveDogCatMouse = run do
   dog <- intVar
   cat <- intVar
   mouse <- intVar
@@ -57,7 +56,7 @@ solveDogCatMouse = run "dogcatmouse" do
   traceM vals
 
 solveSudoku :: Aff Unit
-solveSudoku = run "main2" do
+solveSudoku = run do
   vars <- traverse (const intVar) sudoku
   for2_ vars sudoku \var val -> do
     if val == 0 then do

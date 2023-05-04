@@ -14,7 +14,9 @@ foreign import data Z3Bool :: Type -> Type
 
 foreign import initz3 :: forall r. Effect (Promise (Z3 r))
 
-foreign import context :: forall r. String -> (Z3 r) -> Effect (Context r)
+foreign import context :: forall r. String -> Z3 r -> Effect (Context r)
+
+foreign import freshContext :: forall r. Z3 r -> Effect (Context r)
 
 foreign import solver :: forall r. Context r -> Effect (Solver r)
 
@@ -32,11 +34,11 @@ foreign import mkIntVar :: forall r. Context r -> String -> Effect (Z3Int r)
 
 foreign import mkBoolVar :: forall r. Context r -> String -> Effect (Z3Bool r)
 
-foreign import and_ :: forall r. Context r -> Z3Bool r -> Z3Bool r -> Effect (Z3Bool r) 
+foreign import and_ :: forall r. Z3Bool r -> Z3Bool r -> Effect (Z3Bool r) 
 
-foreign import or_ :: forall r. Context r -> Z3Bool r -> Z3Bool r ->  Effect (Z3Bool r)
+foreign import or_ :: forall r. Z3Bool r -> Z3Bool r ->  Effect (Z3Bool r)
 
-foreign import not_ :: forall r. Context r -> Z3Bool r -> Effect (Z3Bool r) 
+foreign import not_ :: forall r. Z3Bool r -> Effect (Z3Bool r)
 
 foreign import distinct :: forall a r. Context r -> Array a -> Effect (Z3Bool r)
 
