@@ -170,6 +170,9 @@ instance Eval (Z3Int r) BigInt r where
 instance Eval (Z3Bool r) Boolean r where
   eval m v = liftEffect $ Base.evalBool m v
 
+instance Eval a b r => Eval (Array a) (Array b) r where
+  eval = traverse <<< eval
+
 
 run :: forall a. (forall r. Z3 r a) -> Aff a
 run (Z3 m) = do

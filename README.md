@@ -1,18 +1,21 @@
-module Test.Main
-  where
+# purescript-z3
 
-import Prelude hiding (add, mul, eq)
+A PureScript FFI bindings for the Z3 theorem prover
 
-import Data.Array ((..), zipWith, unsafeIndex)
-import Data.Traversable (for_, sequence_)
-import Effect.Class (liftEffect)
-import Effect.Console (logShow)
-import Effect (Effect)
-import Effect.Aff (Aff, launchAff_)
-import Partial.Unsafe (unsafePartial)
-import Z3 as Z3
-import Z3 (add, mul, eq, ge, le)
+### Documentation
 
+todo
+
+### Install
+
+```
+spago install z3
+npm install z3-solver
+```
+
+### Example
+
+```haskell
 sudoku :: Array Int
 sudoku = 
   [ 0, 0, 0, 0, 9, 4, 0, 3, 0
@@ -32,26 +35,6 @@ for2_ t1 t2 f = sequence_ (zipWith f t1 t2)
 uIndex :: forall a. Array a -> Int -> a
 uIndex t i = unsafePartial $ unsafeIndex t i
 
-solveDogCatMouse :: Aff Unit
-solveDogCatMouse = Z3.run do
-  dog <- Z3.intVar
-  cat <- Z3.intVar
-  mouse <- Z3.intVar
-
-  Z3.assert $ dog `ge` 1
-  Z3.assert $ cat `ge` 1
-  Z3.assert $ mouse `ge` 1
-
-  Z3.assert $ (dog `add` cat `add` mouse) `eq` 100
-  Z3.assert $ (dog `mul` 1500) `add` (cat `mul` 100) `add` (mouse `mul` 25) `eq` 10000
-
-  vals <- Z3.withModel \m -> do
-    dog' <- Z3.eval m dog
-    cat' <- Z3.eval m cat
-    mouse' <- Z3.eval m mouse
-    pure { dog: dog', mouse: mouse', cat: cat' }
-  liftEffect $ logShow vals
-
 solveSudoku :: Aff Unit
 solveSudoku = Z3.run do
   vars <- Z3.intVector 81
@@ -68,8 +51,4 @@ solveSudoku = Z3.run do
 
   m <- Z3.withModel \m -> Z3.eval m vars
   liftEffect $ logShow m
-
-main :: Effect Unit
-main = launchAff_ do
-  solveDogCatMouse
-  solveSudoku
+  ```
