@@ -18,6 +18,7 @@ async function main() {
 
     const x = ctx.Int.const('x');
     const y = ctx.Int.const('y');
+    console.log(getMethods(x))
     const solver = new ctx.Solver();
     solver.add(x.gt(2), y.lt(10), x.add(y.mul(2)).eq(7))
     a = await solver.check()

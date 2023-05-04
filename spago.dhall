@@ -13,15 +13,15 @@ to generate this file without the comments in this block.
 { name = "my-project"
 , dependencies =
   [ "aff"
-  , "debug"
   , "effect"
   , "js-bigints"
   , "js-promise"
   , "js-promise-aff"
+  , "maybe"
   , "prelude"
   , "refs"
   , "transformers"
   ]
 , packages = ./packages.dhall
-, sources = [ "src/**/*.purs", "test/**/*.purs" ]
+, sources = [ "src/**/*.purs" ]
 }
