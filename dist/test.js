@@ -12,8 +12,6 @@ const getMethods = (obj) => {
 async function main() {
     const { Context } = await init();
     console.log("plop")
-    const { Context: p2 } = await init();
-    console.log("plop2")
     const ctx = new Context('main');
 
     const x = ctx.Int.const('x');

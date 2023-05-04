@@ -53,3 +53,5 @@ foreign import unsafeLt :: forall r a b. a -> b -> Effect (Z3Bool r)
 foreign import unsafeGt :: forall r a b. a -> b -> Effect (Z3Bool r)
 
 foreign import unsafeAdd :: forall a b. a -> b -> Effect a
+
+foreign import unsafeMul :: forall a b. a -> b -> Effect a

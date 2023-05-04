@@ -82,6 +82,7 @@ class Arith a b r | a -> r where
   lt :: a -> b -> Z3 r (Z3Bool r)
   gt :: a -> b -> Z3 r (Z3Bool r)
   add :: a -> b -> Z3 r a
+  mul :: a -> b -> Z3 r a
 
 instance Arith (Z3Int r) Int r where
   eq a b = liftEffect $ Base.unsafeEq a b
@@ -91,6 +92,7 @@ instance Arith (Z3Int r) Int r where
   lt a b = liftEffect $  Base.unsafeLt a b
   gt a b = liftEffect $ Base.unsafeGt a b
   add a b = liftEffect $ Base.unsafeAdd a b
+  mul a b = liftEffect $ Base.unsafeMul a b
 
 instance Arith (Z3Int r) BigInt r where
   eq a b = liftEffect $ Base.unsafeEq a b
@@ -100,6 +102,7 @@ instance Arith (Z3Int r) BigInt r where
   lt a b = liftEffect $  Base.unsafeLt a b
   gt a b = liftEffect $ Base.unsafeGt a b
   add a b = liftEffect $ Base.unsafeAdd a b
+  mul a b = liftEffect $ Base.unsafeMul a b
 
 instance Arith (Z3Int r) (Z3Int r) r where
   eq a b = liftEffect $ Base.unsafeEq a b
@@ -109,6 +112,7 @@ instance Arith (Z3Int r) (Z3Int r) r where
   lt a b = liftEffect $  Base.unsafeLt a b
   gt a b = liftEffect $ Base.unsafeGt a b
   add a b = liftEffect $ Base.unsafeAdd a b
+  mul a b = liftEffect $ Base.unsafeMul a b
 
 intVar :: forall r. Z3 r (Z3Int r)
 intVar = do
