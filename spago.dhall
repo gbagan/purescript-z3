@@ -12,9 +12,12 @@ to generate this file without the comments in this block.
 -}
 { name = "my-project"
 , dependencies =
-  [ "debug"
+  [ "aff"
+  , "debug"
   , "effect"
   , "js-bigints"
+  , "js-promise"
+  , "js-promise-aff"
   , "prelude"
   , "refs"
   , "transformers"

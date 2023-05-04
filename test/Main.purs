@@ -3,14 +3,15 @@ module Test.Main where
 import Prelude hiding (add)
 
 import Effect (Effect)
-import Z3.Base (add, ge)
-import Z3 (assert, run, intVar)
+import Effect.Aff (launchAff_)
+import Z3 (add, ge, assert, check, run, intVar)
 import Debug (traceM)
 
 main :: Effect Unit
-main = run "main" do
+main = launchAff_ $ run "main" do
   x <- intVar
   y <- intVar
-  traceM $ x `add` y
-  assert $ x `ge` y
+  assert =<< ge x =<< x `add` y
+  s <- check
+  traceM s
   pure unit
