@@ -1,6 +1,7 @@
 # purescript-z3
 
-A PureScript FFI bindings for the Z3 theorem prover
+PureScript FFI bindings for the [Z3 theorem prover](https://github.com/Z3Prover/z3)
+
 
 ### Documentation
 
