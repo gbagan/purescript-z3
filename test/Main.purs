@@ -6,7 +6,7 @@ import Prelude hiding (add, mul, eq)
 import Data.Array ((..), zipWith, unsafeIndex)
 import Data.Traversable (for_, sequence_)
 import Effect.Class (liftEffect)
-import Effect.Console (logShow)
+import Effect.Console (log, logShow)
 import Effect (Effect)
 import Effect.Aff (Aff, launchAff_)
 import Partial.Unsafe (unsafePartial)
@@ -52,6 +52,16 @@ solveDogCatMouse = Z3.run do
     pure { dog: dog', mouse: mouse', cat: cat' }
   liftEffect $ logShow vals
 
+solveArray :: Aff Unit
+solveArray = Z3.run do
+  arr <- Z3.arrayVar
+  x <- Z3.intVar
+  y <- Z3.intVar
+  Z3.assert $ Z3.store arr x y `eq` arr
+  void $ Z3.withModel \m -> do
+    str <- Z3.showModel m
+    liftEffect $ log str
+
 solveSudoku :: Aff Unit
 solveSudoku = Z3.run do
   vars <- Z3.intVector 81
@@ -73,3 +83,4 @@ main :: Effect Unit
 main = launchAff_ do
   solveDogCatMouse
   solveSudoku
+  solveArray

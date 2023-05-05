@@ -13,7 +13,7 @@ import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import JS.BigInt (BigInt)
 import Promise.Aff (toAffE)
-import Z3.Base (Em, Model, Solver, Context, Z3Bool, Z3Int)
+import Z3.Base (Model, Solver, Context, Z3Bool, Z3Int, Z3Array, Z3Sort)
 import Z3.Base as Base
 
 {-
@@ -70,9 +70,48 @@ instance Distinct (Z3Int r) r where
     ctx <- getContext
     liftEffect $ Base.distinct ctx a
 
-class Arith a b r | a b -> r where
+class Expr r a | a -> r where
+  sort :: Z3 r (Z3Sort r a)
+
+instance Expr r (Z3Int r) where
+  sort = do
+    ctx <- getContext
+    liftEffect $ Base.mkIntSort ctx
+
+instance Expr r (Z3Bool r) where
+  sort = do
+    ctx <- getContext
+    liftEffect $ Base.mkBoolSort ctx
+
+instance (Expr r idx, Expr r val) => Expr r (Z3Array r idx val) where
+  sort = do
+    ctx <- getContext
+    idxSort <- sort
+    valSort <- sort
+    liftEffect $ Base.mkArraySort ctx idxSort valSort
+
+class Equality a b r | a b -> r where
   eq :: a -> b -> Z3Bool r
   neq :: a -> b -> Z3Bool r
+
+instance Equality (Z3Int r) Int r where
+  eq a b = Base.unsafeEq a b
+  neq a b = Base.unsafeNeq a b
+
+instance Equality (Z3Int r) BigInt r where
+  eq a b = Base.unsafeEq a b
+  neq a b = Base.unsafeNeq a b
+
+instance Equality (Z3Int r) (Z3Int r) r where
+  eq a b = Base.unsafeEq a b
+  neq a b = Base.unsafeNeq a b
+
+instance Equality (Z3Array r idx val) (Z3Array r idx val) r where
+  eq a b = Base.unsafeEq a b
+  neq a b = Base.unsafeNeq a b
+
+
+class Arith a b r | a b -> r where
   le :: a -> b -> Z3Bool r
   ge :: a -> b -> Z3Bool r
   lt :: a -> b -> Z3Bool r
@@ -81,8 +120,6 @@ class Arith a b r | a b -> r where
   mul :: a -> b -> a
 
 instance Arith (Z3Int r) Int r where
-  eq a b = Base.unsafeEq a b
-  neq a b = Base.unsafeNeq a b
   le a b = Base.unsafeLe a b
   ge a b = Base.unsafeGe a b
   lt a b = Base.unsafeLt a b
@@ -91,8 +128,6 @@ instance Arith (Z3Int r) Int r where
   mul a b = Base.unsafeMul a b
 
 instance Arith (Z3Int r) BigInt r where
-  eq a b = Base.unsafeEq a b
-  neq a b = Base.unsafeNeq a b
   le a b = Base.unsafeLe a b
   ge a b = Base.unsafeGe a b
   lt a b = Base.unsafeLt a b
@@ -101,14 +136,21 @@ instance Arith (Z3Int r) BigInt r where
   mul a b = Base.unsafeMul a b
 
 instance Arith (Z3Int r) (Z3Int r) r where
-  eq a b = Base.unsafeEq a b
-  neq a b = Base.unsafeNeq a b
   le a b = Base.unsafeLe a b
   ge a b = Base.unsafeGe a b
   lt a b = Base.unsafeLt a b
   gt a b = Base.unsafeGt a b
   add a b = Base.unsafeAdd a b
   mul a b = Base.unsafeMul a b
+
+
+store :: forall r idx val. Expr r idx => Expr r val =>
+                            Z3Array r idx val -> idx -> val -> Z3Array r idx val
+store = Base.store
+
+select :: forall r idx val. Expr r idx => Expr r val =>
+                            Z3Array r idx val -> idx -> val
+select = Base.select
 
 intVar :: forall r. Z3 r (Z3Int r)
 intVar = do
@@ -137,6 +179,15 @@ boolVal b = do
 
 boolVector :: forall r. Int -> Z3 r (Array (Z3Bool r))
 boolVector n = traverse (const boolVar) (1..n)
+
+
+arrayVar :: forall r idx val. Expr r idx => Expr r val => Z3 r (Z3Array r idx val)
+arrayVar = do
+  ctx <- getContext
+  name <- freshName
+  idxSort <- sort 
+  valSort <- sort
+  liftEffect $ Base.mkArrayVar ctx name idxSort valSort
 
 assert :: forall r. Z3Bool r -> Z3 r Unit
 assert v = do
