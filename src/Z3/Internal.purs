@@ -1,21 +1,16 @@
-module Z3.Base
+module Z3.Internal
   where
 
 import Prelude
 import Effect (Effect)
 import JS.BigInt (BigInt)
 import Promise (Promise)
+import Z3.Types (Model, Z3Int, Z3Bool, Z3Array, Z3Sort)
 
 foreign import data Z3 :: Type → Type
 foreign import data Em :: Type → Type
 foreign import data Context :: Type → Type
 foreign import data Solver :: Type → Type
-foreign import data Model :: Type → Type
-foreign import data Z3Int :: Type → Type
-foreign import data Z3Bool :: Type → Type
-
-foreign import data Z3Array :: Type → Type → Type → Type
-foreign import data Z3Sort :: Type → Type → Type
 
 foreign import initz3 :: ∀r. Effect (Promise (Z3 r))
 
@@ -90,9 +85,17 @@ foreign import unsafeLt :: ∀r a b. a → b → Z3Bool r
 
 foreign import unsafeGt :: ∀r a b. a → b → Z3Bool r
 
-foreign import unsafeAdd :: ∀a b. a → b → a
+foreign import unsafeAdd :: ∀a b c. a → b → c
 
-foreign import unsafeMul :: ∀a b. a → b → a
+foreign import unsafeMul :: ∀a b c. a → b → c
+
+foreign import unsafeSub :: ∀a b c. a → b → c
+
+foreign import unsafeDiv :: ∀a b c. a → b → c
+
+foreign import unsafeMod :: ∀a b c. a → b → c
+
+foreign import unsafePow :: ∀a b c. a → b → c
 
 foreign import store :: ∀r idx val. Z3Array r idx val → idx → val → Z3Array r idx val
 

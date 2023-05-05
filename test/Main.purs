@@ -1,7 +1,7 @@
 module Test.Main
   where
 
-import Prelude hiding (add, mul, eq)
+import Prelude hiding (add, mul, sub, eq, div)
 
 import Data.Array ((..), zipWith, unsafeIndex)
 import Data.Traversable (for_, sequence_)
@@ -12,7 +12,7 @@ import Effect.Aff (Aff, launchAff_)
 import Effect.Class (liftEffect)
 import Effect.Console (log, logShow)
 import Partial.Unsafe (unsafePartial)
-import Z3 (add, eq, neq, ge, le, mul)
+import Z3 (add, eq, neq, ge, le, sub, mul, div, mod_, pow)
 import Z3 as Z3
 
 sudoku :: Array Int
@@ -77,8 +77,31 @@ solveSudoku = Z3.run do
     Z3.assert =<< Z3.distinct (0..8 <#> \j → idx vars (j * 9 + i))
     Z3.assert =<< Z3.distinct (0..8 <#> \j → idx vars (i / 3 * 27 + i `mod` 3 * 3 + j / 3 * 9 + j `mod` 3))
 
-  m ← Z3.withModel \m → Z3.eval m vars
+  m ← Z3.withModel $ flip Z3.eval vars
   liftEffect $ log $ "sudoku: " <> show m
+
+solveArith :: Aff Unit
+solveArith = Z3.run do
+  x ← Z3.int
+  y ← Z3.int
+  z ← Z3.int
+  t ← Z3.int
+  Z3.assert $ 2 `add` x `eq` 8
+  Z3.assert $ 10 `sub` y `eq` 2
+  Z3.assert $ 13 `mod_` z `eq` 3
+  Z3.assert $ t `pow` 2 `eq` 64
+  vals ← Z3.withModel $ flip Z3.eval [x, y, z, t]
+  liftEffect $ log $ "arith: " <> show vals
+
+solvePythagore :: Aff Unit
+solvePythagore = Z3.run do
+  x ← Z3.int
+  y ← Z3.int
+  z ← Z3.int
+  Z3.assertAll [x `ge` 1, y `ge` 1, z `ge` 1]
+  Z3.assert $ (x `pow` 2) `add` (y `pow` 2) `eq` (z `pow` 2)
+  vals ← Z3.withModel $ flip Z3.eval [x, y, z]
+  liftEffect $ log $ "arith: " <> show vals
 
 solveForall :: Aff Unit
 solveForall = Z3.run do
@@ -86,7 +109,7 @@ solveForall = Z3.run do
   y ← Z3.int
   z ← Z3.int
   Z3.assert $ Z3.forall_ [y, z] $ (x `add` y `add` z) `eq` 10
-  n ← Z3.withModel \m → Z3.eval m x
+  n ← Z3.withModel (flip Z3.eval x)
   liftEffect $ logShow n
 
 petersen :: Array (Tuple Int Int)
@@ -104,7 +127,7 @@ solveGraphColoring = Z3.run do
   for_ petersen \(u /\ v) →
     Z3.assert $ idx colors u `neq` idx colors v
 
-  m ← Z3.withModel \m → Z3.eval m colors
+  m ← Z3.withModel (flip Z3.eval colors)
   liftEffect $ log $ "petersen coloring: " <> show m
 
 main :: Effect Unit
@@ -113,4 +136,6 @@ main = launchAff_ do
   solveSudoku
   solveArray
   -- solveForall
+  solveArith
+  solvePythagore
   solveGraphColoring

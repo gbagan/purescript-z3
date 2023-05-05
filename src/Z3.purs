@@ -1,4 +1,47 @@
-module Z3 where
+module Z3
+  ( Z3
+  , class Expr
+  , class Arith
+  , class Equality
+  , class Eval
+  , and
+  , or
+  , xor
+  , not_
+  , implies
+  , eq
+  , neq
+  , le
+  , ge
+  , lt
+  , gt
+  , add
+  , sub
+  , mul
+  , div
+  , mod_
+  , pow
+  , sort
+  , assert
+  , assertAll
+  , distinct
+  , bool
+  , boolVal
+  , boolVector
+  , forall_
+  , int
+  , intVal
+  , intVector
+  , array
+  , select
+  , store
+  , withModel
+  , showModel
+  , eval
+  , run
+  , module Export
+  )
+  where
 
 import Prelude
 
@@ -13,8 +56,10 @@ import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import JS.BigInt (BigInt)
 import Promise.Aff (toAffE)
-import Z3.Base (Model, Solver, Context, Z3Bool, Z3Int, Z3Array, Z3Sort)
-import Z3.Base as Base
+import Z3.Internal (Solver, Context)
+import Z3.Internal as Base
+import Z3.Types (Z3Int, Z3Bool, Z3Array, Z3Sort, Model)
+import Z3.Types (Z3Int, Z3Bool, Z3Array, Z3Sort, Model) as Export
 
 {-
 class (Monad m, MonadEffect m, MonadAff m) <= MonadZ3 r m where
@@ -118,38 +163,77 @@ instance Equality (Z3Array r idx val) (Z3Array r idx val) r where
   neq a b = Base.unsafeNeq a b
 
 
-class Arith a b r | a b → r where
+class Arith a b c r | a b → c r where
   le :: a → b → Z3Bool r
   ge :: a → b → Z3Bool r
   lt :: a → b → Z3Bool r
   gt :: a → b → Z3Bool r
-  add :: a → b → a
-  mul :: a → b → a
+  add :: a → b → c
+  sub :: a → b → c
+  mul :: a → b → c
+  div :: a → b → c
+  mod_ :: a → b → c
+  pow :: a → b → c
 
-instance Arith (Z3Int r) Int r where
+instance Arith (Z3Int r) Int (Z3Int r) r where
   le a b = Base.unsafeLe a b
   ge a b = Base.unsafeGe a b
   lt a b = Base.unsafeLt a b
   gt a b = Base.unsafeGt a b
   add a b = Base.unsafeAdd a b
+  sub a b = Base.unsafeSub a b
   mul a b = Base.unsafeMul a b
+  div a b = Base.unsafeDiv a b
+  mod_ a b = Base.unsafeMod a b
+  pow a b = Base.unsafePow a b
 
-instance Arith (Z3Int r) BigInt r where
+instance Arith (Z3Int r) BigInt (Z3Int r) r where
   le a b = Base.unsafeLe a b
   ge a b = Base.unsafeGe a b
   lt a b = Base.unsafeLt a b
   gt a b = Base.unsafeGt a b
   add a b = Base.unsafeAdd a b
+  sub a b = Base.unsafeSub a b
   mul a b = Base.unsafeMul a b
+  div a b = Base.unsafeDiv a b
+  mod_ a b = Base.unsafeMod a b
+  pow a b = Base.unsafePow a b
 
-instance Arith (Z3Int r) (Z3Int r) r where
+instance Arith (Z3Int r) (Z3Int r) (Z3Int r) r where
   le a b = Base.unsafeLe a b
   ge a b = Base.unsafeGe a b
   lt a b = Base.unsafeLt a b
   gt a b = Base.unsafeGt a b
   add a b = Base.unsafeAdd a b
+  sub a b = Base.unsafeSub a b
   mul a b = Base.unsafeMul a b
+  div a b = Base.unsafeDiv a b
+  mod_ a b = Base.unsafeMod a b
+  pow a b = Base.unsafePow a b
 
+instance Arith Int (Z3Int r) (Z3Int r) r where
+  le a b = Base.unsafeLe a b
+  ge a b = Base.unsafeGe a b
+  lt a b = Base.unsafeLt a b
+  gt a b = Base.unsafeGt a b
+  add a b = Base.unsafeAdd a b
+  sub a b = Base.unsafeSub a b
+  mul a b = Base.unsafeMul a b
+  div a b = Base.unsafeDiv a b
+  mod_ a b = Base.unsafeMod a b
+  pow a b = Base.unsafePow a b
+
+instance Arith BigInt (Z3Int r) (Z3Int r) r where
+  le a b = Base.unsafeLe a b
+  ge a b = Base.unsafeGe a b
+  lt a b = Base.unsafeLt a b
+  gt a b = Base.unsafeGt a b
+  add a b = Base.unsafeAdd a b
+  sub a b = Base.unsafeSub a b
+  mul a b = Base.unsafeMul a b
+  div a b = Base.unsafeDiv a b
+  mod_ a b = Base.unsafeMod a b
+  pow a b = Base.unsafePow a b
 
 store :: ∀r idx val. Expr r idx ⇒ Expr r val ⇒
                             Z3Array r idx val → idx → val → Z3Array r idx val
