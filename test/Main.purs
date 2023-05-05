@@ -12,7 +12,7 @@ import Effect.Aff (Aff, launchAff_)
 import Effect.Class (liftEffect)
 import Effect.Console (log, logShow)
 import Partial.Unsafe (unsafePartial)
-import Z3 (add, eq, neq, ge, le, sub, mul, div, mod_, pow)
+import Z3 (add, eq, neq, ge, le, sub, mul, mod_, pow)
 import Z3 as Z3
 
 sudoku :: Array Int
