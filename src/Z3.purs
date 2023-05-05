@@ -13,7 +13,7 @@ import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import JS.BigInt (BigInt)
 import Promise.Aff (toAffE)
-import Z3.Base (Model, Solver, Context, Z3Bool, Z3Int)
+import Z3.Base (Em, Model, Solver, Context, Z3Bool, Z3Int)
 import Z3.Base as Base
 
 {-
@@ -177,7 +177,10 @@ instance Eval a b r => Eval (Array a) (Array b) r where
 run :: forall a. (forall r. Z3 r a) -> Aff a
 run (Z3 m) = do
   z3 <- toAffE $ Base.initz3 
+  em <- liftEffect $ Base.em z3
   ctx <- liftEffect $ Base.freshContext z3
   slv <- liftEffect $ Base.solver ctx
   ref <- liftEffect $ Ref.new 0
-  runReaderT m { context: ctx, solver: slv, counter: ref }
+  res <- runReaderT m { context: ctx, solver: slv, counter: ref }
+  liftEffect $ Base.killThreads em
+  pure res

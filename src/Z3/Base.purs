@@ -6,6 +6,7 @@ import JS.BigInt (BigInt)
 import Promise (Promise)
 
 foreign import data Z3 :: Type -> Type
+foreign import data Em :: Type -> Type
 foreign import data Context :: Type -> Type
 foreign import data Solver :: Type -> Type
 foreign import data Model :: Type -> Type
@@ -13,6 +14,8 @@ foreign import data Z3Int :: Type -> Type
 foreign import data Z3Bool :: Type -> Type
 
 foreign import initz3 :: forall r. Effect (Promise (Z3 r))
+
+foreign import em :: forall r. Z3 r -> Effect (Em r)
 
 foreign import context :: forall r. String -> Z3 r -> Effect (Context r)
 
@@ -64,3 +67,5 @@ foreign import unsafeGt :: forall r a b. a -> b -> Z3Bool r
 foreign import unsafeAdd :: forall a b. a -> b -> a
 
 foreign import unsafeMul :: forall a b. a -> b -> a
+
+foreign import killThreads :: forall r. Em r -> Effect Unit

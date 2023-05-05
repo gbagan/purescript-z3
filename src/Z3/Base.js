@@ -3,6 +3,9 @@ import { init } from 'z3-solver'
 let _counter = 0
 
 export const initz3 = init
+
+export const em = z3 => () => z3.em
+
 export const context = name => z3 => () => new z3.Context(name)
 
 export const freshContext = z3 => () => {
@@ -34,3 +37,4 @@ export const unsafeLt = a => b => a.lt(b)
 export const unsafeGt = a => b => a.gt(b)
 export const unsafeAdd = a => b => a.add(b)
 export const unsafeMul = a => b => a.mul(b)
+export const killThreads = em => () => em.PThread.terminateAllThreads()
