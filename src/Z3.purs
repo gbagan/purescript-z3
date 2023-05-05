@@ -153,8 +153,8 @@ select :: forall r idx val. Expr r idx => Expr r val =>
                             Z3Array r idx val -> idx -> val
 select = Base.select
 
-intVar :: forall r. Z3 r (Z3Int r)
-intVar = do
+int :: forall r. Z3 r (Z3Int r)
+int = do
   ctx <- getContext
   name <- freshName
   liftEffect $ Base.mkIntVar ctx name
@@ -165,10 +165,10 @@ intVal b = do
   liftEffect $ Base.mkIntVal ctx b
 
 intVector :: forall r. Int -> Z3 r (Array (Z3Int r))
-intVector n = traverse (const intVar) (1..n)
+intVector n = traverse (const int) (1..n)
 
-boolVar :: forall r. Z3 r (Z3Bool r)
-boolVar = do
+bool :: forall r. Z3 r (Z3Bool r)
+bool = do
   ctx <- getContext
   name <- freshName
   liftEffect $ Base.mkBoolVar ctx name
@@ -179,11 +179,11 @@ boolVal b = do
   liftEffect $ Base.mkBoolVal ctx b
 
 boolVector :: forall r. Int -> Z3 r (Array (Z3Bool r))
-boolVector n = traverse (const boolVar) (1..n)
+boolVector n = traverse (const bool) (1..n)
 
 
-arrayVar :: forall r idx val. Expr r idx => Expr r val => Z3 r (Z3Array r idx val)
-arrayVar = do
+array :: forall r idx val. Expr r idx => Expr r val => Z3 r (Z3Array r idx val)
+array = do
   ctx <- getContext
   name <- freshName
   idxSort <- sort 
@@ -194,11 +194,6 @@ assert :: forall r. Z3Bool r -> Z3 r Unit
 assert v = do
   solver <- getSolver
   liftEffect $ Base.solverAdd v solver
-
-check :: forall r. Z3 r String
-check = do
-  solver <- getSolver
-  liftAff $ toAffE $ Base.solverCheck solver 
 
 withModel :: forall r a. (Model r -> Z3 r a) -> Z3 r (Maybe a)
 withModel f = do

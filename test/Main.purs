@@ -5,12 +5,14 @@ import Prelude hiding (add, mul, eq)
 
 import Data.Array ((..), zipWith, unsafeIndex)
 import Data.Traversable (for_, sequence_)
+import Data.Tuple (Tuple)
+import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Aff (Aff, launchAff_)
 import Effect.Class (liftEffect)
 import Effect.Console (log, logShow)
 import Partial.Unsafe (unsafePartial)
-import Z3 (add, eq, ge, intVar, le, mul)
+import Z3 (add, eq, neq, ge, le, mul)
 import Z3 as Z3
 
 sudoku :: Array Int
@@ -29,14 +31,14 @@ sudoku =
 for2_ :: forall a b m. Applicative m => Array a -> Array b -> (a -> b -> m Unit) -> m Unit
 for2_ t1 t2 f = sequence_ (zipWith f t1 t2)
 
-uIndex :: forall a. Array a -> Int -> a
-uIndex t i = unsafePartial $ unsafeIndex t i
+idx :: forall a. Array a -> Int -> a
+idx t i = unsafePartial $ unsafeIndex t i
 
 solveDogCatMouse :: Aff Unit
 solveDogCatMouse = Z3.run do
-  dog <- Z3.intVar
-  cat <- Z3.intVar
-  mouse <- Z3.intVar
+  dog <- Z3.int
+  cat <- Z3.int
+  mouse <- Z3.int
 
   Z3.assert $ dog `ge` 1
   Z3.assert $ cat `ge` 1
@@ -50,13 +52,13 @@ solveDogCatMouse = Z3.run do
     cat' <- Z3.eval m cat
     mouse' <- Z3.eval m mouse
     pure { dog: dog', mouse: mouse', cat: cat' }
-  liftEffect $ logShow vals
+  liftEffect $ log $ "dog, mouse and cat: " <> show vals
 
 solveArray :: Aff Unit
 solveArray = Z3.run do
-  arr <- Z3.arrayVar
-  x <- Z3.intVar
-  y <- Z3.intVar
+  arr <- Z3.array
+  x <- Z3.int
+  y <- Z3.int
   Z3.assert $ Z3.store arr x y `eq` arr
   void $ Z3.withModel \m -> do
     str <- Z3.showModel m
@@ -72,21 +74,40 @@ solveSudoku = Z3.run do
     else
       Z3.assert $ var `eq` val
   for_ (0..8) \i -> do
-    Z3.assert =<< Z3.distinct ((0..8) <#> \j -> uIndex vars (i * 9 + j))
-    Z3.assert =<< Z3.distinct ((0..8) <#> \j -> uIndex vars (j * 9 + i))
-    Z3.assert =<< Z3.distinct ((0..8) <#> \j -> uIndex vars (i / 3 * 27 + i `mod` 3 * 3 + j / 3 * 9 + j `mod` 3))
+    Z3.assert =<< Z3.distinct (0..8 <#> \j -> idx vars (i * 9 + j))
+    Z3.assert =<< Z3.distinct (0..8 <#> \j -> idx vars (j * 9 + i))
+    Z3.assert =<< Z3.distinct (0..8 <#> \j -> idx vars (i / 3 * 27 + i `mod` 3 * 3 + j / 3 * 9 + j `mod` 3))
 
   m <- Z3.withModel \m -> Z3.eval m vars
-  liftEffect $ logShow m
+  liftEffect $ log $ "sudoku: " <> show m
 
 solveForall :: Aff Unit
 solveForall = Z3.run do
-  x <- intVar
-  y <- intVar
-  z <- intVar
+  x <- Z3.int
+  y <- Z3.int
+  z <- Z3.int
   Z3.assert $ Z3.forall_ [y, z] $ (x `add` y `add` z) `eq` 10
   n <- Z3.withModel \m -> Z3.eval m x
   liftEffect $ logShow n
+
+petersen :: Array (Tuple Int Int)
+petersen =
+  [ 0 /\ 1, 1 /\ 2, 2 /\ 3, 3 /\ 4, 4 /\ 0
+  , 5 /\ 7, 7 /\ 9, 9 /\ 6, 6 /\ 8, 8 /\ 5
+  , 0 /\ 5, 1 /\ 6, 2 /\ 7, 3 /\ 8, 4 /\ 9
+  ]
+
+solveGraphColoring :: Aff Unit
+solveGraphColoring = Z3.run do
+  colors <- Z3.intVector 10
+  for_ colors \c -> do
+    Z3.assert $ c `ge` 0
+    Z3.assert $ c `le` 2
+  for_ petersen \(u /\ v) ->
+    Z3.assert $ idx colors u `neq` idx colors v
+
+  m <- Z3.withModel \m -> Z3.eval m colors
+  liftEffect $ log $ "petersen coloring: " <> show m
 
 main :: Effect Unit
 main = launchAff_ do
@@ -94,3 +115,4 @@ main = launchAff_ do
   solveSudoku
   solveArray
   -- solveForall
+  solveGraphColoring
