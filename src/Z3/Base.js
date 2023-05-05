@@ -31,8 +31,10 @@ export const mkArrayVar = context => name => idxSort => valSort => () =>
                             context.Array.const(name, idxSort, valSort)
 export const mkArraySort = context => idxSort => valSort => () =>
     context.Array.sort(idxSort, valSort)
-export const and_ = a => b => a.and(b)
-export const or_ = a => b => a.or(b)
+export const and = a => b => a.and(b)
+export const or = a => b => a.or(b)
+export const xor = a => b => a.xor(b)
+export const implies = a => b => a.implies(b)
 export const not_ = a => a.neq()
 export const distinct = context => a => () => context.Distinct(...a)
 export const unsafeForall = vars => body => body.ctx.ForAll(vars, body)

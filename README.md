@@ -30,26 +30,26 @@ sudoku =
   , 0, 4, 0, 9, 7, 0, 0, 0, 0
   ]
 
-for2_ :: forall a b m. Applicative m => Array a -> Array b -> (a -> b -> m Unit) -> m Unit
+for2_ :: ∀a b m. Applicative m ⇒ Array a → Array b → (a → b → m Unit) → m Unit
 for2_ t1 t2 f = sequence_ (zipWith f t1 t2)
 
-uIndex :: forall a. Array a -> Int -> a
+uIndex :: ∀a. Array a → Int → a
 uIndex t i = unsafePartial $ unsafeIndex t i
 
 solveSudoku :: Aff Unit
 solveSudoku = Z3.run do
-  vars <- Z3.intVector 81
-  for2_ vars sudoku \var val -> do
+  vars ← Z3.intVector 81
+  for2_ vars sudoku \var val → do
     if val == 0 then do
       Z3.assert $ var `ge` 1
       Z3.assert $ var `le` 9
     else
       Z3.assert $ var `eq` val
-  for_ (0..8) \i -> do
-    Z3.assert =<< Z3.distinct ((0..8) <#> \j -> uIndex vars (i * 9 + j))
-    Z3.assert =<< Z3.distinct ((0..8) <#> \j -> uIndex vars (j * 9 + i))
-    Z3.assert =<< Z3.distinct ((0..8) <#> \j -> uIndex vars (i / 3 * 27 + i `mod` 3 * 3 + j / 3 * 9 + j `mod` 3))
+  for_ (0..8) \i → do
+    Z3.assert =<< Z3.distinct ((0..8) <#> \j → uIndex vars (i * 9 + j))
+    Z3.assert =<< Z3.distinct ((0..8) <#> \j → uIndex vars (j * 9 + i))
+    Z3.assert =<< Z3.distinct ((0..8) <#> \j → uIndex vars (i / 3 * 27 + i `mod` 3 * 3 + j / 3 * 9 + j `mod` 3))
 
-  m <- Z3.withModel \m -> Z3.eval m vars
+  m ← Z3.withModel \m → Z3.eval m vars
   liftEffect $ logShow m
   ```
