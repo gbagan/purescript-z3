@@ -36,7 +36,13 @@ export const or = a => b => a.or(b)
 export const xor = a => b => a.xor(b)
 export const implies = a => b => a.implies(b)
 export const not_ = a => a.neq()
-export const distinct = context => a => () => context.Distinct(...a)
+export const distinct = a => {
+    if (a.length === 0)
+        throw new Error("distinct: parameter is empty")
+    else   
+        return a[0].ctx.Distinct(...a)
+}
+
 export const unsafeForall = vars => body => body.ctx.ForAll(vars, body)
 export const unsafeEq = a => b => a.eq(b)
 export const unsafeNeq = a => b => a.neq(b)

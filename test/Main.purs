@@ -73,9 +73,9 @@ solveSudoku = Z3.run do
     else
       Z3.assert $ var `eq` val
   for_ (0..8) \i → do
-    Z3.assert =<< Z3.distinct (0..8 <#> \j → idx vars (i * 9 + j))
-    Z3.assert =<< Z3.distinct (0..8 <#> \j → idx vars (j * 9 + i))
-    Z3.assert =<< Z3.distinct (0..8 <#> \j → idx vars (i / 3 * 27 + i `mod` 3 * 3 + j / 3 * 9 + j `mod` 3))
+    Z3.assert $ Z3.distinct $ 0..8 <#> \j → idx vars (i * 9 + j)
+    Z3.assert $ Z3.distinct $ 0..8 <#> \j → idx vars (j * 9 + i)
+    Z3.assert $ Z3.distinct $ 0..8 <#> \j → idx vars (i / 3 * 27 + i `mod` 3 * 3 + j / 3 * 9 + j `mod` 3)
 
   m ← Z3.withModel $ flip Z3.eval vars
   liftEffect $ log $ "sudoku: " <> show m

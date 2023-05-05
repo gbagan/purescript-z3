@@ -69,7 +69,7 @@ foreign import implies :: ∀r. Z3Bool r → Z3Bool r →  Z3Bool r
 
 foreign import not_ :: ∀r. Z3Bool r → Z3Bool r
 
-foreign import distinct :: ∀a r. Context r → Array a → Effect (Z3Bool r)
+foreign import distinct :: ∀a r. Array a → Z3Bool r
 
 foreign import unsafeForall :: forall a r. Array a → Z3Bool r → Z3Bool r
 

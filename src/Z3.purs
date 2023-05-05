@@ -148,10 +148,8 @@ forall_ :: ∀a r. Expr r a ⇒ Array a →  Z3Bool r → Z3Bool r
 forall_ = Base.unsafeForall
 
 -- | asserts that all Z3 expressions in the array are distinct
-distinct :: ∀a r. Expr r a ⇒ Array a → Z3 r (Z3Bool r)
-distinct a = do
-  ctx ← getContext
-  liftEffect $ Base.distinct ctx a
+distinct :: ∀a r. Expr r a ⇒ Array a → Z3Bool r
+distinct = Base.distinct
 
 class Equality a b r | a b → r where
   eq :: a → b → Z3Bool r
