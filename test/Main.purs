@@ -5,13 +5,13 @@ import Prelude hiding (add, mul, eq)
 
 import Data.Array ((..), zipWith, unsafeIndex)
 import Data.Traversable (for_, sequence_)
-import Effect.Class (liftEffect)
-import Effect.Console (log, logShow)
 import Effect (Effect)
 import Effect.Aff (Aff, launchAff_)
+import Effect.Class (liftEffect)
+import Effect.Console (log, logShow)
 import Partial.Unsafe (unsafePartial)
+import Z3 (add, eq, ge, intVar, le, mul)
 import Z3 as Z3
-import Z3 (add, mul, eq, ge, le)
 
 sudoku :: Array Int
 sudoku = 
@@ -79,8 +79,18 @@ solveSudoku = Z3.run do
   m <- Z3.withModel \m -> Z3.eval m vars
   liftEffect $ logShow m
 
+solveForall :: Aff Unit
+solveForall = Z3.run do
+  x <- intVar
+  y <- intVar
+  z <- intVar
+  Z3.assert $ Z3.forall_ [y, z] $ (x `add` y `add` z) `eq` 10
+  n <- Z3.withModel \m -> Z3.eval m x
+  liftEffect $ logShow n
+
 main :: Effect Unit
 main = launchAff_ do
   solveDogCatMouse
   solveSudoku
   solveArray
+  -- solveForall

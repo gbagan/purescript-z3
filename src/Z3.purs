@@ -62,14 +62,6 @@ or_ b1 b2 = Base.or_ b1 b2
 not_ :: forall r. Z3Bool r -> Z3Bool r
 not_ = Base.not_
 
-class Distinct a r | a -> r where
-  distinct :: Array a -> Z3 r (Z3Bool r)
-
-instance Distinct (Z3Int r) r where
-  distinct a = do
-    ctx <- getContext
-    liftEffect $ Base.distinct ctx a
-
 class Expr r a | a -> r where
   sort :: Z3 r (Z3Sort r a)
 
@@ -89,6 +81,15 @@ instance (Expr r idx, Expr r val) => Expr r (Z3Array r idx val) where
     idxSort <- sort
     valSort <- sort
     liftEffect $ Base.mkArraySort ctx idxSort valSort
+
+
+forall_ :: forall a r. Expr r a => Array a ->  Z3Bool r -> Z3Bool r
+forall_ = Base.unsafeForall
+
+distinct :: forall a r. Expr r a => Array a -> Z3 r (Z3Bool r)
+distinct a = do
+  ctx <- getContext
+  liftEffect $ Base.distinct ctx a
 
 class Equality a b r | a b -> r where
   eq :: a -> b -> Z3Bool r

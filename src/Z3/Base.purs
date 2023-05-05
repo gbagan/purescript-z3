@@ -71,6 +71,8 @@ foreign import not_ :: forall r. Z3Bool r -> Z3Bool r
 
 foreign import distinct :: forall a r. Context r -> Array a -> Effect (Z3Bool r)
 
+foreign import unsafeForall :: forall a r. Array a -> Z3Bool r -> Z3Bool r
+
 foreign import unsafeEq :: forall r a b. a -> b -> Z3Bool r 
 
 foreign import unsafeNeq :: forall r a b. a -> b -> Z3Bool r

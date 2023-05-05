@@ -20,7 +20,7 @@ async function main() {
     solver.add(x.gt(2), y.lt(10), x.add(y.mul(2)).eq(7))
     solver.add(b)
     a = await solver.check()
-    // console.log(x)
+    console.log(x)
     model = solver.model()
     console.log("plop")
     console.log(model.eval(b).toString())
