@@ -33,8 +33,8 @@ sudoku =
 for2_ :: forall a b m. Applicative m => Array a -> Array b -> (a -> b -> m Unit) -> m Unit
 for2_ t1 t2 f = sequence_ (zipWith f t1 t2)
 
-uIndex :: forall a. Array a -> Int -> a
-uIndex t i = unsafePartial $ unsafeIndex t i
+idx :: forall a. Array a -> Int -> a
+idx t i = unsafePartial $ unsafeIndex t i
 
 solveSudoku :: Aff Unit
 solveSudoku = Z3.run do
@@ -46,9 +46,9 @@ solveSudoku = Z3.run do
     else
       Z3.assert $ var `eq` val
   for_ (0..8) \i -> do
-    Z3.assert =<< Z3.distinct ((0..8) <#> \j -> uIndex vars (i * 9 + j))
-    Z3.assert =<< Z3.distinct ((0..8) <#> \j -> uIndex vars (j * 9 + i))
-    Z3.assert =<< Z3.distinct ((0..8) <#> \j -> uIndex vars (i / 3 * 27 + i `mod` 3 * 3 + j / 3 * 9 + j `mod` 3))
+    Z3.assert =<< Z3.distinct ((0..8) <#> \j -> idx vars (i * 9 + j))
+    Z3.assert =<< Z3.distinct ((0..8) <#> \j -> idx vars (j * 9 + i))
+    Z3.assert =<< Z3.distinct ((0..8) <#> \j -> idx vars (i / 3 * 27 + i `mod` 3 * 3 + j / 3 * 9 + j `mod` 3))
 
   m <- Z3.withModel \m -> Z3.eval m vars
   liftEffect $ logShow m
