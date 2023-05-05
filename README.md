@@ -5,7 +5,7 @@ PureScript FFI bindings for the [Z3 theorem prover](https://github.com/Z3Prover/
 
 ### Documentation
 
-todo
+Documentation is [published on Pursuit](https://pursuit.purescript.org/packages/purescript-z3)
 
 ### Install
 
@@ -54,3 +54,7 @@ solveSudoku = Z3.run do
   m ← Z3.withModel \m → Z3.eval m vars
   liftEffect $ logShow m
   ```
+
+### More examples
+
+https://github.com/gbagan/purescript-z3/blob/main/test/Main.purs
