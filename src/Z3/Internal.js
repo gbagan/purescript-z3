@@ -64,8 +64,3 @@ export const store = arr => idx => val => arr.store(idx, val)
 export const select = arr => idx => arr.select(idx)
 
 export const killThreads = em => () => em.PThread.terminateAllThreads()
-
-
-patchContext = ctx => {
-    
-}
