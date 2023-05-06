@@ -5,7 +5,7 @@ import Prelude
 import Effect (Effect)
 import JS.BigInt (BigInt)
 import Promise (Promise)
-import Z3.Types (Model, Z3Int, Z3Bool, Z3Array, Z3Sort)
+import Z3.Types (Model, Z3Int, Z3Real, Z3Bool, Z3Array, Z3Sort)
 
 foreign import data Z3 :: Type → Type
 foreign import data Em :: Type → Type
@@ -47,6 +47,12 @@ foreign import mkBoolVal :: ∀r. Context r → Boolean → Effect (Z3Bool r)
 
 foreign import mkBoolSort :: ∀r. Context r → Effect (Z3Sort r (Z3Bool r))
 
+foreign import mkRealVar :: ∀r. Context r → String → Effect (Z3Real r)
+
+foreign import mkRealVal :: ∀r. Context r → Number → Effect (Z3Real r)
+
+foreign import mkRealSort :: ∀r. Context r → Effect (Z3Sort r (Z3Real r))
+
 
 foreign import mkArrayVar :: ∀r idx val. Context r 
                                             → String 
@@ -72,6 +78,8 @@ foreign import not_ :: ∀r. Z3Bool r → Z3Bool r
 foreign import distinct :: ∀a r. Array a → Z3Bool r
 
 foreign import unsafeForall :: forall a r. Array a → Z3Bool r → Z3Bool r
+
+foreign import unsafeExists :: forall a r. Array a → Z3Bool r → Z3Bool r
 
 foreign import unsafeEq :: ∀r a b. a → b → Z3Bool r 
 

@@ -21,7 +21,7 @@ async function main() {
     solver.add(b)
     a = await solver.check()
     model = solver.model()
-    console.log(getMethods(x))
+    console.log(x)
     console.log(model.eval(b).toString())
 }
 

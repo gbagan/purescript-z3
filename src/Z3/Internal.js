@@ -27,6 +27,9 @@ export const mkIntSort = context => () => context.Int.sort()
 export const mkBoolVar = context => name => () => context.Bool.const(name)
 export const mkBoolVal = context => b => () => context.Bool.val(b)
 export const mkBoolSort = context => () => context.Bool.sort()
+export const mkRealVar = context => name => () => context.Real.const(name)
+export const mkRealVal = context => b => () => context.Real.val(b)
+export const mkRealSort = context => () => context.Real.sort()
 export const mkArrayVar = context => name => idxSort => valSort => () =>
                             context.Array.const(name, idxSort, valSort)
 export const mkArraySort = context => idxSort => valSort => () =>
@@ -44,12 +47,13 @@ export const distinct = a => {
 }
 
 export const unsafeForall = vars => body => body.ctx.ForAll(vars, body)
-export const unsafeEq = a => b => a.eq(b)
-export const unsafeNeq = a => b => a.neq(b)
-export const unsafeLe = a => b => a.le(b)
-export const unsafeGe = a => b => a.ge(b)
-export const unsafeLt = a => b => a.lt(b)
-export const unsafeGt = a => b => a.gt(b)
+export const unsafeExists = vars => body => body.ctx.Exists(vars, body)
+export const unsafeEq = a => b => a.eq ? a.eq(b) : b.eq(a)
+export const unsafeNeq = a => b => a.neq ? a.neq(b) : b.neq(a)
+export const unsafeLe = a => b => a.le ? a.le(b) : b.ge(a)
+export const unsafeGe = a => b => a.ge ? a.ge(b) : b.le(a)
+export const unsafeLt = a => b => a.lt ? a.lt(b) : b.gt(a)
+export const unsafeGt = a => b => a.gt ? a.gt(b) : b.gt(a)
 export const unsafeAdd = a => b => a.add ? a.add(b) : b.ctx.Int.val(a).add(b)
 export const unsafeMul = a => b => a.mul ? a.mul(b) : b.ctx.Int.val(a).mul(b)
 export const unsafeSub = a => b => a.sub ? a.sub(b) : b.ctx.Int.val(a).sub(b)
@@ -60,3 +64,8 @@ export const store = arr => idx => val => arr.store(idx, val)
 export const select = arr => idx => arr.select(idx)
 
 export const killThreads = em => () => em.PThread.terminateAllThreads()
+
+
+patchContext = ctx => {
+    
+}

@@ -12,7 +12,7 @@ import Effect.Aff (Aff, launchAff_)
 import Effect.Class (liftEffect)
 import Effect.Console (log, logShow)
 import Partial.Unsafe (unsafePartial)
-import Z3 (add, eq, neq, ge, le, sub, mul, mod_, pow)
+import Z3 (add, eq, neq, ge, le, sub, mul, mod_, pow, and, implies)
 import Z3 as Z3
 
 sudoku :: Array Int
@@ -103,14 +103,14 @@ solvePythagore = Z3.run do
   vals ← Z3.withModel $ flip Z3.eval [x, y, z]
   liftEffect $ log $ "arith: " <> show vals
 
-solveForall :: Aff Unit
-solveForall = Z3.run do
+solveQuantifier :: Aff Unit
+solveQuantifier = Z3.run do
   x ← Z3.int
   y ← Z3.int
   z ← Z3.int
-  Z3.assert $ Z3.forall_ [y, z] $ (x `add` y `add` z) `eq` 10
+  Z3.assert $ Z3.forall_ [y] ((y `ge` 0) `and` (y `le` 9)) `implies` (Z3.exists [z] $ (x `add` y `add` z) `eq` 10)
   n ← Z3.withModel (flip Z3.eval x)
-  liftEffect $ logShow n
+  liftEffect $ log $ "quantifier: " <> show n
 
 petersen :: Array (Tuple Int Int)
 petersen =
@@ -135,7 +135,7 @@ main = launchAff_ do
   solveDogCatMouse
   solveSudoku
   solveArray
-  -- solveForall
+  solveQuantifier
   solveArith
   solvePythagore
   solveGraphColoring
