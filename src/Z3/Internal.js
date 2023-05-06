@@ -46,6 +46,20 @@ export const distinct = a => {
         return a[0].ctx.Distinct(...a)
 }
 
+export const sum = a => {
+    if (a.length === 0)
+        throw new Error("sum: parameter is empty")
+    else   
+        return a[0].ctx.Sum(...a)
+}
+
+export const product = a => {
+    if (a.length === 0)
+        throw new Error("product: parameter is empty")
+    else   
+        return a[0].ctx.Product(...a)
+}
+
 export const unsafeForall = vars => body => body.ctx.ForAll(vars, body)
 export const unsafeExists = vars => body => body.ctx.Exists(vars, body)
 export const unsafeEq = a => b => a.eq ? a.eq(b) : b.eq(a)
@@ -54,12 +68,20 @@ export const unsafeLe = a => b => a.le ? a.le(b) : b.ge(a)
 export const unsafeGe = a => b => a.ge ? a.ge(b) : b.le(a)
 export const unsafeLt = a => b => a.lt ? a.lt(b) : b.gt(a)
 export const unsafeGt = a => b => a.gt ? a.gt(b) : b.gt(a)
-export const unsafeAdd = a => b => a.add ? a.add(b) : b.ctx.Int.val(a).add(b)
-export const unsafeMul = a => b => a.mul ? a.mul(b) : b.ctx.Int.val(a).mul(b)
-export const unsafeSub = a => b => a.sub ? a.sub(b) : b.ctx.Int.val(a).sub(b)
-export const unsafeDiv = a => b => a.div ? a.div(b) : b.ctx.Int.val(a).div(b)
-export const unsafeMod = a => b => a.div ? a.div(b) : b.ctx.Int.val(a).mod(b)
-export const unsafePow = a => b => a.pow ? a.pow(b) : b.ctx.Int.val(a).pow(b)
+const unsafeOp = op => a => b => {
+    if (!a.add)
+        a = b.ctx.isReal(b) ? b.ctx.Real.val(a) : b.ctx.Int.val(a)
+    //else if (b.add && b.ctx.isInt(a) && b.ctx.isReal(a))
+    //    a = b.ctx.ToReal(a)
+    return a[op](b)
+}
+export const unsafeAdd = unsafeOp("add")
+export const unsafeMul = unsafeOp("mul")
+export const unsafeSub = unsafeOp("sub")
+export const unsafeDiv = unsafeOp("div")
+export const unsafeMod = unsafeOp("mod")
+export const unsafePow = unsafeOp("pow")
+export const toReal = a => a.ctx.ToReal(a)
 export const store = arr => idx => val => arr.store(idx, val)
 export const select = arr => idx => arr.select(idx)
 

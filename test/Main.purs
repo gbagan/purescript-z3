@@ -44,8 +44,8 @@ solveDogCatMouse = Z3.run do
   Z3.assert $ cat `ge` 1
   Z3.assert $ mouse `ge` 1
 
-  Z3.assert $ (dog `add` cat `add` mouse) `eq` 100
-  Z3.assert $ (dog `mul` 1500) `add` (cat `mul` 100) `add` (mouse `mul` 25) `eq` 10000
+  Z3.assert $ Z3.sum [dog, cat, mouse] `eq` 100
+  Z3.assert $ Z3.sum [dog `mul` 1500, cat `mul` 100, mouse `mul` 25] `eq` 10000
 
   vals ← Z3.withModel \m → do
     dog' ← Z3.eval m dog
@@ -83,14 +83,17 @@ solveSudoku = Z3.run do
 solveArith :: Aff Unit
 solveArith = Z3.run do
   x ← Z3.int
-  y ← Z3.int
+  y ← Z3.real
+  let x' = Z3.toReal(x)
   z ← Z3.int
   t ← Z3.int
+  Z3.assert $ Z3.sum [x' `add` y, y `add` x'] `ge` 0.0
+  y ← Z3.real
   Z3.assert $ 2 `add` x `eq` 8
-  Z3.assert $ 10 `sub` y `eq` 2
+  Z3.assert $ 10.0 `sub` y `eq` 2.0
   Z3.assert $ 13 `mod_` z `eq` 3
   Z3.assert $ t `pow` 2 `eq` 64
-  vals ← Z3.withModel $ flip Z3.eval [x, y, z, t]
+  vals ← Z3.withModel $ flip Z3.eval [x, z, t]
   liftEffect $ log $ "arith: " <> show vals
 
 solvePythagore :: Aff Unit

@@ -15,13 +15,15 @@ async function main() {
     const ctx = new Context('main');
     const b = ctx.Bool.const('b');
     const x = ctx.Int.const('x');
-    const y = ctx.Int.const('y');
+    const y = ctx.Real.const('y');
     const solver = new ctx.Solver();
-    solver.add(x.gt(2), y.lt(10), x.add(y.mul(2)).eq(7))
-    solver.add(b)
+    solver.add(x.gt(2), y.lt(10), y.add(x).eq(7))
+    solver.add(y.gt(x))
+    console.log(y.add(x).mul(2).id())
+    console.log(y.add(x).mul(2).id())
     a = await solver.check()
     model = solver.model()
-    console.log(x)
+    console.log(y)
     console.log(model.eval(b).toString())
 }
 

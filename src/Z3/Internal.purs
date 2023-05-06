@@ -77,6 +77,11 @@ foreign import not_ :: ∀r. Z3Bool r → Z3Bool r
 
 foreign import distinct :: ∀a r. Array a → Z3Bool r
 
+foreign import sum :: ∀a. Array a → a
+
+foreign import product :: ∀a. Array a → a
+
+
 foreign import unsafeForall :: forall a r. Array a → Z3Bool r → Z3Bool r
 
 foreign import unsafeExists :: forall a r. Array a → Z3Bool r → Z3Bool r
@@ -104,6 +109,8 @@ foreign import unsafeDiv :: ∀a b c. a → b → c
 foreign import unsafeMod :: ∀a b c. a → b → c
 
 foreign import unsafePow :: ∀a b c. a → b → c
+
+foreign import toReal :: ∀r. Z3Int r → Z3Real r
 
 foreign import store :: ∀r idx val. Z3Array r idx val → idx → val → Z3Array r idx val
 

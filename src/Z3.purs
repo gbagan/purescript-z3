@@ -25,6 +25,8 @@ module Z3
   , assert
   , assertAll
   , distinct
+  , sum
+  , product
   , forall_
   , exists
   , bool
@@ -36,6 +38,7 @@ module Z3
   , real
   , realVal
   , realVector
+  , toReal
   , array
   , select
   , store
@@ -174,8 +177,6 @@ instance Equality Int (Z3Int r) r
 instance Equality BigInt (Z3Int r) r
 instance Equality (Z3Int r) (Z3Int r) r
 instance Equality (Z3Real r) (Z3Real r) r
-instance Equality (Z3Real r) (Z3Int r) r
-instance Equality (Z3Int r) (Z3Real r) r
 instance Equality (Z3Real r) Number r
 instance Equality Number (Z3Real r) r
 instance Equality (Z3Array r idx val) (Z3Array r idx val) r
@@ -197,8 +198,6 @@ instance Arith BigInt (Z3Int r) (Z3Int r) r
 instance Arith (Z3Real r) (Z3Real r) (Z3Real r) r
 instance Arith (Z3Real r) Number (Z3Real r) r
 instance Arith Number (Z3Real r) (Z3Real r) r
-instance Arith (Z3Real r) (Z3Int r) (Z3Real r) r
-instance Arith (Z3Int r) (Z3Real r) (Z3Real r) r
 
 le :: ∀ a b c r. Arith a b c r ⇒ a → b → Z3Bool r
 le = Base.unsafeLe
@@ -230,6 +229,14 @@ mod_ a b = Base.unsafeMod a b
 pow :: ∀ a b c r. Arith a b c r ⇒ a → b → c
 pow a b = Base.unsafePow a b
 
+sum :: ∀a r. Arith a a a r ⇒ Array a → a
+sum = Base.sum
+
+product :: ∀a r. Arith a a a r ⇒ Array a → a
+product = Base.product
+
+toReal :: ∀r. Z3Int r → Z3Real r
+toReal = Base.toReal
 
 store :: ∀r idx val. Expr r idx ⇒ Expr r val ⇒
                             Z3Array r idx val → idx → val → Z3Array r idx val
@@ -342,7 +349,7 @@ instance Eval a b r ⇒ Eval (Array a) (Array b) r where
   eval = traverse <<< eval
 
 
--- | run a `ST` computation
+-- | run a `Z3` computation
 run :: ∀a. (∀r. Z3 r a) → Aff a
 run (Z3 m) = do
   z3 ← toAffE $ Base.initz3 
