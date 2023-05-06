@@ -13,6 +13,7 @@ to generate this file without the comments in this block.
 { name = "my-project"
 , dependencies =
   [ "aff"
+  , "arrays"
   , "effect"
   , "foldable-traversable"
   , "js-bigints"
@@ -20,6 +21,7 @@ to generate this file without the comments in this block.
   , "js-promise-aff"
   , "maybe"
   , "prelude"
+  , "record"
   , "refs"
   , "transformers"
   ]

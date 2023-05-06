@@ -5,7 +5,7 @@ import Prelude
 import Effect (Effect)
 import JS.BigInt (BigInt)
 import Promise (Promise)
-import Z3.Types (Model, Z3Int, Z3Real, Z3Bool, Z3Array, Z3Sort)
+import Z3.Types (Model, Z3Int, Z3Real, Z3Bool, Z3Array, Z3Function, Z3Function2, Z3Sort)
 
 foreign import data Z3 :: Type → Type
 foreign import data Em :: Type → Type
@@ -65,6 +65,19 @@ foreign import mkArraySort :: ∀r idx val. Context r
                                             → (Z3Sort r val) 
                                             → Effect (Z3Sort r (Z3Array r idx val))
 
+foreign import mkFunDecl :: ∀r dom img. Context r 
+                                            → String 
+                                            → (Z3Sort r dom)
+                                            → (Z3Sort r img) 
+                                            → Effect (Z3Function r dom img)
+
+foreign import mkFunDecl2 :: ∀r dom1 dom2 img. Context r 
+                                            → String 
+                                            → (Z3Sort r dom1)
+                                            → (Z3Sort r dom2)
+                                            → (Z3Sort r img) 
+                                            → Effect (Z3Function2 r dom1 dom2 img)
+
 foreign import and :: ∀r. Z3Bool r → Z3Bool r → Z3Bool r
 
 foreign import or :: ∀r. Z3Bool r → Z3Bool r →  Z3Bool r
@@ -115,5 +128,10 @@ foreign import toReal :: ∀r. Z3Int r → Z3Real r
 foreign import store :: ∀r idx val. Z3Array r idx val → idx → val → Z3Array r idx val
 
 foreign import select :: ∀r idx val. Z3Array r idx val → idx → val
+
+foreign import apply :: ∀r dom img. Z3Function r dom img → dom → img
+
+foreign import apply2 :: ∀r dom1 dom2 img. Z3Function2 r dom1 dom2 img → dom2 → img
+
 
 foreign import killThreads :: ∀r. Em r → Effect Unit

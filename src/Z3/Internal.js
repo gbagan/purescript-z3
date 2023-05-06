@@ -34,6 +34,10 @@ export const mkArrayVar = context => name => idxSort => valSort => () =>
                             context.Array.const(name, idxSort, valSort)
 export const mkArraySort = context => idxSort => valSort => () =>
     context.Array.sort(idxSort, valSort)
+export const mkFunDecl = ctx => name => domSort => imgSort => () =>
+                            ctx.Function.declare(name, domSort, imgSort)   
+export const mkFunDecl2 = ctx => name => dom1Sort => dom2Sort => imgSort => () =>
+                            ctx.Function.declare(name, dom1Sort, dom2Sort, imgSort) 
 export const and = a => b => a.and(b)
 export const or = a => b => a.or(b)
 export const xor = a => b => a.xor(b)
@@ -68,6 +72,7 @@ export const unsafeLe = a => b => a.le ? a.le(b) : b.ge(a)
 export const unsafeGe = a => b => a.ge ? a.ge(b) : b.le(a)
 export const unsafeLt = a => b => a.lt ? a.lt(b) : b.gt(a)
 export const unsafeGt = a => b => a.gt ? a.gt(b) : b.gt(a)
+
 const unsafeOp = op => a => b => {
     if (!a.add)
         a = b.ctx.isReal(b) ? b.ctx.Real.val(a) : b.ctx.Int.val(a)
@@ -75,6 +80,7 @@ const unsafeOp = op => a => b => {
     //    a = b.ctx.ToReal(a)
     return a[op](b)
 }
+
 export const unsafeAdd = unsafeOp("add")
 export const unsafeMul = unsafeOp("mul")
 export const unsafeSub = unsafeOp("sub")
@@ -84,5 +90,7 @@ export const unsafePow = unsafeOp("pow")
 export const toReal = a => a.ctx.ToReal(a)
 export const store = arr => idx => val => arr.store(idx, val)
 export const select = arr => idx => arr.select(idx)
+export const apply = f => x => f.call(x)
+export const apply2 = f => x => y => f.call(x, y)
 
 export const killThreads = em => () => em.PThread.terminateAllThreads()

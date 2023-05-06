@@ -10,7 +10,7 @@ import Data.Tuple.Nested ((/\))
 import Effect (Effect)
 import Effect.Aff (Aff, launchAff_)
 import Effect.Class (liftEffect)
-import Effect.Console (log, logShow)
+import Effect.Console (log)
 import Partial.Unsafe (unsafePartial)
 import Z3 (add, eq, neq, ge, le, sub, mul, mod_, pow, and, implies)
 import Z3 as Z3
@@ -47,11 +47,7 @@ solveDogCatMouse = Z3.run do
   Z3.assert $ Z3.sum [dog, cat, mouse] `eq` 100
   Z3.assert $ Z3.sum [dog `mul` 1500, cat `mul` 100, mouse `mul` 25] `eq` 10000
 
-  vals ← Z3.withModel \m → do
-    dog' ← Z3.eval m dog
-    cat' ← Z3.eval m cat
-    mouse' ← Z3.eval m mouse
-    pure { dog: dog', mouse: mouse', cat: cat' }
+  vals ← Z3.withModel $ flip Z3.eval { dog, mouse, cat }
   liftEffect $ log $ "dog, mouse and cat: " <> show vals
 
 solveArray :: Aff Unit

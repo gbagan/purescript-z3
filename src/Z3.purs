@@ -4,6 +4,7 @@ module Z3
   , class Arith
   , class Equality
   , class Eval
+  , class EvalRL
   , and
   , or
   , xor
@@ -40,11 +41,14 @@ module Z3
   , realVector
   , toReal
   , array
+  , function
+  , function2
   , select
   , store
   , withModel
   , showModel
   , eval
+  , evalRL
   , run
   , module Export
   )
@@ -55,6 +59,7 @@ import Prelude
 import Control.Monad.Reader.Trans (runReaderT, ReaderT, asks)
 import Data.Array ((..))
 import Data.Maybe (Maybe(..))
+import Data.Symbol (class IsSymbol) 
 import Data.Traversable (traverse, traverse_)
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff, liftAff)
@@ -62,11 +67,15 @@ import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Ref (Ref)
 import Effect.Ref as Ref
 import JS.BigInt (BigInt)
+import Prim.Row as Row
+import Prim.RowList (RowList, Cons, Nil, class RowToList)
 import Promise.Aff (toAffE)
+import Record as Record
+import Type.Proxy (Proxy(..))
 import Z3.Internal (Solver, Context)
 import Z3.Internal as Base
-import Z3.Types (Z3Int, Z3Bool, Z3Real, Z3Array, Z3Sort, Model)
-import Z3.Types (Z3Int, Z3Bool, Z3Real, Z3Array, Z3Sort, Model) as Export
+import Z3.Types (Z3Int, Z3Bool, Z3Real, Z3Array, Z3Function, Z3Function2, Z3Sort, Model)
+import Z3.Types (Z3Int, Z3Bool, Z3Real, Z3Array, Z3Function, Z3Function2, Z3Sort, Model) as Export
 
 {-
 class (Monad m, MonadEffect m, MonadAff m) <= MonadZ3 r m where
@@ -246,6 +255,14 @@ select :: ∀r idx val. Expr r idx ⇒ Expr r val ⇒
                             Z3Array r idx val → idx → val
 select = Base.select
 
+apply :: ∀r dom img. Expr r dom ⇒ Expr r img ⇒
+                            Z3Function r dom img → dom → img
+apply = Base.apply
+
+apply2 :: ∀r dom1 dom2 img. Expr r dom1 ⇒ Expr r dom2 ⇒ Expr r img ⇒
+                            Z3Function2 r dom1 dom2 img → dom1 → dom2 → img
+apply2 = Base.apply2
+
 -- | Create an integer Z3 variable with a fresh name
 int :: ∀r. Z3 r (Z3Int r)
 int = do
@@ -308,6 +325,26 @@ array = do
   valSort ← sort
   liftEffect $ Base.mkArrayVar ctx name idxSort valSort
 
+-- | declare a function of arity 1
+function :: ∀r dom img. Expr r dom ⇒ Expr r img ⇒ Z3 r (Z3Function r dom img)
+function = do
+  ctx ← getContext
+  name ← freshName
+  domSort ← sort 
+  imgSort ← sort
+  liftEffect $ Base.mkFunDecl ctx name domSort imgSort
+
+-- | declare a function of arity 2
+function2 :: ∀r dom1 dom2 img. Expr r dom1 ⇒ Expr r dom2 ⇒ Expr r img ⇒
+                Z3 r (Z3Function2 r dom1 dom2 img)
+function2 = do
+  ctx ← getContext
+  name ← freshName
+  dom1Sort ← sort
+  dom2Sort ← sort 
+  imgSort ← sort
+  liftEffect $ Base.mkFunDecl2 ctx name dom1Sort dom2Sort imgSort
+
 -- | Add a new assertion to the solver
 assert :: ∀r. Z3Bool r → Z3 r Unit
 assert v = do
@@ -348,6 +385,32 @@ instance Eval (Z3Bool r) Boolean r where
 instance Eval a b r ⇒ Eval (Array a) (Array b) r where
   eval = traverse <<< eval
 
+instance (RowToList a al, EvalRL al a b r) ⇒ Eval (Record a) (Record b) r where
+  eval m a = evalRL (Proxy :: _ al) m a
+
+class EvalRL :: RowList Type -> Row Type -> Row Type -> Type -> Constraint
+class EvalRL aL a b r | aL → a b r where
+  evalRL :: Proxy aL → Model r → Record a → Z3 r (Record b)
+
+instance EvalRL Nil () () r where
+  evalRL _ = const pure
+
+instance
+  ( EvalRL tail aTail bTail r
+  , Eval a b r
+  , IsSymbol sym
+  , Row.Lacks sym aTail
+  , Row.Lacks sym bTail
+  , Row.Cons sym a aTail aRow
+  , Row.Cons sym b bTail bRow
+  ) =>
+  EvalRL (Cons sym a tail) aRow bRow r where
+  evalRL _ model a' = do
+    let
+      this = Record.get (Proxy :: _ sym) a'
+    val <- eval model this
+    tail <- evalRL (Proxy :: _ tail) model (Record.delete (Proxy :: _ sym) a')
+    pure $ Record.insert (Proxy :: _ sym) val tail
 
 -- | run a `Z3` computation
 run :: ∀a. (∀r. Z3 r a) → Aff a
