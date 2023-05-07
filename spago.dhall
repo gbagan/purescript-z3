@@ -16,6 +16,7 @@ to generate this file without the comments in this block.
   , "arrays"
   , "effect"
   , "foldable-traversable"
+  , "functions"
   , "js-bigints"
   , "js-promise"
   , "js-promise-aff"

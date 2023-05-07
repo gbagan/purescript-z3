@@ -4,44 +4,40 @@ let _counter = 0
 
 export const initz3 = init
 
-export const em = z3 => () => z3.em
+export const em = z3 => z3.em
 
-export const context = name => z3 => () => new z3.Context(name)
+export const context = (z3, name) => new z3.Context(name)
 
-export const freshContext = z3 => () => {
+export const freshContext = z3 => {
     const name = "context__" + _counter
     _counter++
     return new z3.Context(name)
 }
 
-export const solver = ctx => () => new ctx.Solver()
-export const solverAdd = v => solver => () => solver.add(v)
-export const solverAddSoft = v => weight => id => solver => () => solver.addSoft(v, weight, id)
-export const solverCheck = solver => () => solver.check()
-export const maximize = v => solver => () => solver.maximize(v)
-export const minimize = v => solver => () => solver.minimize(v)
-export const optimize = ctx => () => new ctx.Optimize ()
-export const solverModel = solver => () => solver.model()
-export const showModel = model => () => model.toString()
-export const evalInt = model => v => () => model.eval(v).value()
-export const evalBool = model => v => () => model.eval(v).toString() === "true"
-export const mkIntVar = context => name => () => context.Int.const(name)
-export const mkIntVal = context => name => () => context.Int.val(name)
-export const mkIntSort = context => () => context.Int.sort()
-export const mkBoolVar = context => name => () => context.Bool.const(name)
-export const mkBoolVal = context => b => () => context.Bool.val(b)
-export const mkBoolSort = context => () => context.Bool.sort()
-export const mkRealVar = context => name => () => context.Real.const(name)
-export const mkRealVal = context => b => () => context.Real.val(b)
-export const mkRealSort = context => () => context.Real.sort()
-export const mkArrayVar = context => name => idxSort => valSort => () =>
-                            context.Array.const(name, idxSort, valSort)
-export const mkArraySort = context => idxSort => valSort => () =>
-    context.Array.sort(idxSort, valSort)
-export const mkFunDecl = ctx => name => domSort => imgSort => () =>
-                            ctx.Function.declare(name, domSort, imgSort)   
-export const mkFunDecl2 = ctx => name => dom1Sort => dom2Sort => imgSort => () =>
-                            ctx.Function.declare(name, dom1Sort, dom2Sort, imgSort) 
+export const solver = ctx => new ctx.Solver()
+export const solverAdd = (solver, v) => solver.add(v)
+export const solverAddSoft = (solver, v, weight, id) => solver.addSoft(v, weight, id)
+export const solverCheck = solver => solver.check()
+export const maximize = (solver, v) => solver.maximize(v)
+export const minimize = (solver, v) => solver.minimize(v)
+export const optimize = ctx => new ctx.Optimize ()
+export const solverModel = solver => solver.model()
+export const showModel = model => model.toString()
+export const evalInt = (model, v) => model.eval(v).value()
+export const evalBool = (model, v) => model.eval(v).toString() === "true"
+export const mkIntVar = (context, name) => context.Int.const(name)
+export const mkIntVal = (context, name) => context.Int.val(name)
+export const mkIntSort = context => context.Int.sort()
+export const mkBoolVar = (context, name) => context.Bool.const(name)
+export const mkBoolVal = (context, b) => context.Bool.val(b)
+export const mkBoolSort = context => context.Bool.sort()
+export const mkRealVar = (context, name) => context.Real.const(name)
+export const mkRealVal = (context, b) => context.Real.val(b)
+export const mkRealSort = context => context.Real.sort()
+export const mkArrayVar = (context, name, idxSort, valSort) => context.Array.const(name, idxSort, valSort)
+export const mkArraySort = (context, idxSort, valSort) => context.Array.sort(idxSort, valSort)
+export const mkFunDecl = (ctx, name, domSort, imgSort) => ctx.Function.declare(name, domSort, imgSort)   
+export const mkFunDecl2 = (ctx, name, dom1Sort, dom2Sort, imgSort) => ctx.Function.declare(name, dom1Sort, dom2Sort, imgSort) 
 export const and = a => b => a.and(b)
 export const or = a => b => a.or(b)
 export const xor = a => b => a.xor(b)
@@ -92,9 +88,9 @@ export const unsafeDiv = unsafeOp("div")
 export const unsafeMod = unsafeOp("mod")
 export const unsafePow = unsafeOp("pow")
 export const toReal = a => a.ctx.ToReal(a)
-export const store = arr => idx => val => arr.store(idx, val)
-export const select = arr => idx => arr.select(idx)
-export const apply = f => x => f.call(x)
-export const apply2 = f => x => y => f.call(x, y)
+export const store = (arr, idx, val) => arr.store(idx, val)
+export const select = (arr, idx) => arr.select(idx)
+export const apply = (f, x) => f.call(x)
+export const apply2 = (f, x, y) => f.call(x, y)
 
-export const killThreads = em => () => em.PThread.terminateAllThreads()
+export const killThreads = em => em.PThread.terminateAllThreads()
