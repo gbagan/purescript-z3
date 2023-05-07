@@ -22,9 +22,18 @@ foreign import freshContext :: ∀r. Z3 r → Effect (Context r)
 
 foreign import solver :: ∀r. Context r → Effect (Solver r)
 
+foreign import optimize :: ∀r. Context r → Effect (Solver r)
+
 foreign import solverAdd :: ∀r. Z3Bool r → Solver r → Effect Unit
 
+foreign import solverAddSoft :: ∀r. Z3Bool r → Int → String → Solver r → Effect Unit
+
 foreign import solverCheck :: ∀r. Solver r → Effect (Promise String)
+
+foreign import maximize :: ∀r a . a → Solver r → Effect Unit
+
+foreign import minimize :: ∀r a. a →  Solver r → Effect Unit
+
 
 foreign import solverModel :: ∀r. Solver r → Effect (Model r)
 
@@ -131,7 +140,7 @@ foreign import select :: ∀r idx val. Z3Array r idx val → idx → val
 
 foreign import apply :: ∀r dom img. Z3Function r dom img → dom → img
 
-foreign import apply2 :: ∀r dom1 dom2 img. Z3Function2 r dom1 dom2 img → dom2 → img
+foreign import apply2 :: ∀r dom1 dom2 img. Z3Function2 r dom1 dom2 img → dom1 → dom2 → img
 
 
 foreign import killThreads :: ∀r. Em r → Effect Unit

@@ -16,7 +16,11 @@ export const freshContext = z3 => () => {
 
 export const solver = ctx => () => new ctx.Solver()
 export const solverAdd = v => solver => () => solver.add(v)
+export const solverAddSoft = v => weight => id => solver => () => solver.addSoft(v, weight, id)
 export const solverCheck = solver => () => solver.check()
+export const maximize = v => solver => () => solver.maximize(v)
+export const minimize = v => solver => () => solver.minimize(v)
+export const optimize = ctx => () => new ctx.Optimize ()
 export const solverModel = solver => () => solver.model()
 export const showModel = model => () => model.toString()
 export const evalInt = model => v => () => model.eval(v).value()

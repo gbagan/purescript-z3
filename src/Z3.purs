@@ -1,5 +1,6 @@
 module Z3
   ( Z3
+  , OptMode
   , class Expr
   , class Arith
   , class Equality
@@ -23,8 +24,6 @@ module Z3
   , mod_
   , pow
   , sort
-  , assert
-  , assertAll
   , distinct
   , sum
   , product
@@ -43,13 +42,21 @@ module Z3
   , array
   , function
   , function2
+  , apply
+  , apply2
   , select
   , store
+  , assert
+  , assertSoft
+  , assertAll
   , withModel
   , showModel
   , eval
   , evalRL
+  , minimize
+  , maximize
   , run
+  , runOpt
   , module Export
   )
   where
@@ -90,31 +97,35 @@ type Z3Env r =
   , counter :: Ref Int
   }
 
+
+data OptMode
+
 -- | A monad which represents a `Z3` computation under a specific context. 
 -- | The `Z3`` monad uses a phantom type to  prevent that the computation leaks any Z3 object
 -- | references to the surrounding computation.
-newtype Z3 r a = Z3 (ReaderT (Z3Env r) Aff a)
+newtype Z3 :: Type -> Type -> Type -> Type
+newtype Z3 r mode a = Z3 (ReaderT (Z3Env r) Aff a)
 
-getSolver :: ∀r. Z3 r (Solver r)
+getSolver :: ∀r mode. Z3 r mode (Solver r)
 getSolver  = Z3 $ asks _.solver
 
-getContext :: ∀r.  Z3 r (Context r)
+getContext :: ∀r mode. Z3 r mode (Context r)
 getContext = Z3 $ asks _.context
 
-freshName :: ∀r. Z3 r String
+freshName :: ∀r mode. Z3 r mode String
 freshName = Z3 $ do
   c ← asks _.counter
   v ← liftEffect $ Ref.read c
   liftEffect $ Ref.write (v+1) c
   pure $ "x_" <> show v
 
-derive newtype instance Functor (Z3 r)
-derive newtype instance Apply (Z3 r)
-derive newtype instance Applicative (Z3 r)
-derive newtype instance Bind (Z3 r)
-derive newtype instance Monad (Z3 r)
-derive newtype instance MonadEffect (Z3 r)
-derive newtype instance MonadAff (Z3 r)
+derive newtype instance Functor (Z3 r mode)
+derive newtype instance Apply (Z3 r mode)
+derive newtype instance Applicative (Z3 r mode)
+derive newtype instance Bind (Z3 r mode)
+derive newtype instance Monad (Z3 r mode)
+derive newtype instance MonadEffect (Z3 r mode)
+derive newtype instance MonadAff (Z3 r mode)
 
 -- | boolean and between two Z3 expressions
 and :: ∀r. Z3Bool r → Z3Bool r → Z3Bool r
@@ -139,7 +150,7 @@ not_ = Base.not_
 -- | is the class of Z3 expressions (i.e. Z3 ASTs)
 class Expr r a | a → r where
   -- | sort represents the type of a Z3 expression
-  sort :: Z3 r (Z3Sort r a)
+  sort :: ∀(mode :: Type). Z3 r mode (Z3Sort r a)
 
 instance Expr r (Z3Int r) where
   sort = do
@@ -264,60 +275,60 @@ apply2 :: ∀r dom1 dom2 img. Expr r dom1 ⇒ Expr r dom2 ⇒ Expr r img ⇒
 apply2 = Base.apply2
 
 -- | Create an integer Z3 variable with a fresh name
-int :: ∀r. Z3 r (Z3Int r)
+int :: ∀r mode. Z3 r mode (Z3Int r)
 int = do
   ctx ← getContext
   name ← freshName
   liftEffect $ Base.mkIntVar ctx name
 
 -- | Create an integer Z3 value
-intVal :: ∀r. Int → Z3 r (Z3Int r)
+intVal :: ∀r mode. Int → Z3 r mode (Z3Int r)
 intVal b = do
   ctx ← getContext
   liftEffect $ Base.mkIntVal ctx b
 
 
 -- | Create an  array of n integer Z3 variables
-intVector :: ∀r. Int → Z3 r (Array (Z3Int r))
+intVector :: ∀r mode. Int → Z3 r mode (Array (Z3Int r))
 intVector n = traverse (const int) (1..n)
 
 -- | Create a boolean Z3 variable with a fresh name
-bool :: ∀r. Z3 r (Z3Bool r)
+bool :: ∀r mode. Z3 r mode (Z3Bool r)
 bool = do
   ctx ← getContext
   name ← freshName
   liftEffect $ Base.mkBoolVar ctx name
 
 -- | Create a boolean Z3 value
-boolVal :: ∀r. Boolean → Z3 r (Z3Bool r)
+boolVal :: ∀r mode. Boolean → Z3 r mode (Z3Bool r)
 boolVal b = do
   ctx ← getContext
   liftEffect $ Base.mkBoolVal ctx b
 
 -- | Create an  array of n boolean Z3 variables
-boolVector :: ∀r. Int → Z3 r (Array (Z3Bool r))
+boolVector :: ∀r mode. Int → Z3 r mode (Array (Z3Bool r))
 boolVector n = traverse (const bool) (1..n)
 
 -- | Create a boolean Z3 variable with a fresh name
-real :: ∀r. Z3 r (Z3Real r)
+real :: ∀r mode. Z3 r mode (Z3Real r)
 real = do
   ctx ← getContext
   name ← freshName
   liftEffect $ Base.mkRealVar ctx name
 
 -- | Create a real Z3 value
-realVal :: ∀r. Number → Z3 r (Z3Real r)
+realVal :: ∀r mode. Number → Z3 r mode (Z3Real r)
 realVal v = do
   ctx ← getContext
   liftEffect $ Base.mkRealVal ctx v
 
 -- | Create an  array of n real Z3 variables
-realVector :: ∀r. Int → Z3 r (Array (Z3Real r))
+realVector :: ∀r mode. Int → Z3 r mode (Array (Z3Real r))
 realVector n = traverse (const real) (1..n)
 
 
 -- | Create an  array Z3 variable (not to be confused with an array of Z3 variables)
-array :: ∀r idx val. Expr r idx ⇒ Expr r val ⇒ Z3 r (Z3Array r idx val)
+array :: ∀r mode idx val. Expr r idx ⇒ Expr r val ⇒ Z3 r mode (Z3Array r idx val)
 array = do
   ctx ← getContext
   name ← freshName
@@ -326,7 +337,7 @@ array = do
   liftEffect $ Base.mkArrayVar ctx name idxSort valSort
 
 -- | declare a function of arity 1
-function :: ∀r dom img. Expr r dom ⇒ Expr r img ⇒ Z3 r (Z3Function r dom img)
+function :: ∀r mode dom img. Expr r dom ⇒ Expr r img ⇒ Z3 r mode (Z3Function r dom img)
 function = do
   ctx ← getContext
   name ← freshName
@@ -335,8 +346,8 @@ function = do
   liftEffect $ Base.mkFunDecl ctx name domSort imgSort
 
 -- | declare a function of arity 2
-function2 :: ∀r dom1 dom2 img. Expr r dom1 ⇒ Expr r dom2 ⇒ Expr r img ⇒
-                Z3 r (Z3Function2 r dom1 dom2 img)
+function2 :: ∀r mode dom1 dom2 img. Expr r dom1 ⇒ Expr r dom2 ⇒ Expr r img ⇒
+                Z3 r mode (Z3Function2 r dom1 dom2 img)
 function2 = do
   ctx ← getContext
   name ← freshName
@@ -346,13 +357,20 @@ function2 = do
   liftEffect $ Base.mkFunDecl2 ctx name dom1Sort dom2Sort imgSort
 
 -- | Add a new assertion to the solver
-assert :: ∀r. Z3Bool r → Z3 r Unit
+assert :: ∀r mode. Z3Bool r → Z3 r mode Unit
 assert v = do
   solver ← getSolver
   liftEffect $ Base.solverAdd v solver
 
+
+-- | Add a new assertion to the solver
+assertSoft :: ∀r. Z3Bool r → Int → String →  Z3 r OptMode Unit
+assertSoft v weight id = do
+  solver ← getSolver
+  liftEffect $ Base.solverAddSoft v weight id solver
+
 -- | Add an array of assertions to the solver
-assertAll :: ∀r. Array (Z3Bool r) → Z3 r Unit
+assertAll :: ∀r mode. Array (Z3Bool r) → Z3 r mode Unit
 assertAll = traverse_ assert
 
 -- | Check if the assertions are satisfiable.
@@ -360,7 +378,7 @@ assertAll = traverse_ assert
 -- | ```haskell
 -- | withModel \m → eval m [x, y, z]
 -- | ````
-withModel :: ∀r a. (Model r → Z3 r a) → Z3 r (Maybe a)
+withModel :: ∀r mode a. (Model r → Z3 r mode a) → Z3 r mode (Maybe a)
 withModel f = do
   solver ← getSolver
   res ← liftAff $ toAffE $ Base.solverCheck solver
@@ -370,11 +388,24 @@ withModel f = do
   else
     pure Nothing
 
-showModel :: ∀r. Model r → Z3 r String
+showModel :: ∀r mode. Model r → Z3 r mode String
 showModel = liftEffect <<< Base.showModel
 
+-- | Add objective function to minimize.
+minimize :: ∀a r. Arith a a a r ⇒ a → Z3 r OptMode Unit
+minimize expr = do
+  solver ← getSolver
+  liftEffect $ Base.minimize expr solver
+
+-- | Add objective function to maximize.
+maximize :: ∀a r. Arith a a a r ⇒ a → Z3 r OptMode Unit
+maximize expr = do
+  solver ← getSolver
+  liftEffect $ Base.maximize expr solver
+
+
 class Eval a b r | a → b r where
-  eval :: Model r → a → Z3 r b
+  eval :: forall (mode :: Type). Model r → a → Z3 r mode b
 
 instance Eval (Z3Int r) BigInt r where
   eval m v = liftEffect $ Base.evalInt m v
@@ -388,9 +419,9 @@ instance Eval a b r ⇒ Eval (Array a) (Array b) r where
 instance (RowToList a al, EvalRL al a b r) ⇒ Eval (Record a) (Record b) r where
   eval m a = evalRL (Proxy :: _ al) m a
 
-class EvalRL :: RowList Type -> Row Type -> Row Type -> Type -> Constraint
+class EvalRL :: RowList Type → Row Type → Row Type → Type → Constraint
 class EvalRL aL a b r | aL → a b r where
-  evalRL :: Proxy aL → Model r → Record a → Z3 r (Record b)
+  evalRL :: forall (mode :: Type). Proxy aL → Model r → Record a → Z3 r mode (Record b)
 
 instance EvalRL Nil () () r where
   evalRL _ = const pure
@@ -412,13 +443,25 @@ instance
     tail <- evalRL (Proxy :: _ tail) model (Record.delete (Proxy :: _ sym) a')
     pure $ Record.insert (Proxy :: _ sym) val tail
 
--- | run a `Z3` computation
-run :: ∀a. (∀r. Z3 r a) → Aff a
+-- | Run a `Z3` computation.
+run :: ∀a. (∀r mode. Z3 r mode a) → Aff a
 run (Z3 m) = do
   z3 ← toAffE $ Base.initz3 
   em ← liftEffect $ Base.em z3
   ctx ← liftEffect $ Base.freshContext z3
   slv ← liftEffect $ Base.solver ctx
+  ref ← liftEffect $ Ref.new 0
+  res ← runReaderT m { context: ctx, solver: slv, counter: ref }
+  liftEffect $ Base.killThreads em
+  pure res
+
+-- | Run a `Z3` optimization computation.  
+runOpt :: ∀a. (∀r. Z3 r OptMode a) → Aff a
+runOpt (Z3 m) = do
+  z3 ← toAffE $ Base.initz3 
+  em ← liftEffect $ Base.em z3
+  ctx ← liftEffect $ Base.freshContext z3
+  slv ← liftEffect $ Base.optimize ctx
   ref ← liftEffect $ Ref.new 0
   res ← runReaderT m { context: ctx, solver: slv, counter: ref }
   liftEffect $ Base.killThreads em
