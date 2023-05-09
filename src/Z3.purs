@@ -152,7 +152,7 @@ not_ = Base.not_
 -- | is the class of Z3 expressions (i.e. Z3 ASTs)
 class Expr r a | a → r where
   -- | sort represents the type of a Z3 expression
-  sort :: ∀(mode :: Type). Z3 r mode (Z3Sort r a)
+  sort :: ∀mode. Z3 r mode (Z3Sort r a)
 
 instance Expr r (Z3Int r) where
   sort = do
@@ -189,7 +189,7 @@ exists = Base.unsafeForall
 distinct :: ∀a r. Expr r a ⇒ Array a → Z3Bool r
 distinct = Base.distinct
 
-class Equality :: ∀k1 k2 k3. k1 → k2 → k3 → Constraint
+class Equality :: Type → Type → Type → Constraint
 class Equality a b r | a b → r
 
 instance Equality (Z3Bool r) (Z3Bool r) r
@@ -209,7 +209,7 @@ eq a b = Base.unsafeEq a b
 neq :: ∀ a b r. Equality a b r ⇒ a → b → Z3Bool r
 neq a b = Base.unsafeNeq a b
 
-class Arith :: forall k1 k2 k3 k4. k1 -> k2 -> k3 -> k4 -> Constraint
+class Arith :: Type -> Type -> Type -> Type -> Constraint
 class Arith a b c r | a b → c r
 
 instance Arith (Z3Int r) Int (Z3Int r) r
@@ -407,7 +407,7 @@ maximize expr = do
 
 
 class Eval a b r | a → b r where
-  eval :: forall (mode :: Type). Model r → a → Z3 r mode b
+  eval :: ∀mode. Model r → a → Z3 r mode b
 
 instance Eval (Z3Int r) BigInt r where
   eval m v = liftEffect $ runEffectFn2 Base.evalInt m v
@@ -423,7 +423,7 @@ instance (RowToList a al, EvalRL al a b r) ⇒ Eval (Record a) (Record b) r wher
 
 class EvalRL :: RowList Type → Row Type → Row Type → Type → Constraint
 class EvalRL aL a b r | aL → a b r where
-  evalRL :: forall (mode :: Type). Proxy aL → Model r → Record a → Z3 r mode (Record b)
+  evalRL :: ∀mode. Proxy aL → Model r → Record a → Z3 r mode (Record b)
 
 instance EvalRL Nil () () r where
   evalRL _ = const pure
